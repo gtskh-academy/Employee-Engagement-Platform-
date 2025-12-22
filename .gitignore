@@ -1,0 +1,66 @@
+# Xcode build artifacts
+build/
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+
+# User-specific settings
+*.xcworkspace/xcuserdata/
+*.xcuserdata/
+*.moved-aside
+*.swp
+*.swo
+
+# IDE indexing and logs
+.idea/
+*.xcscmblueprint
+*.xcdebugger/
+*.xcconfig
+*.xccheckout
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# Asset catalog compiled files
+*.car
+
+# Temporary files
+*.tmp
+*.DS_Store
+*.lock
+*.bak
+*.orig
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# Carthage
+Carthage/
+
+# Fastlane
+fastlane/report.xml
+fastlane/screenshots
+fastlane/test_output
+
+# Archives
+*.xcarchive
+
+# Simulator logs and devices
+*.simruntime
+*.simdevice
+
+# Copilot instructions file
+.github/copilot-instructions.md
+.DS_Store
+.DS_Store
+
+# VSCode integration files
+.vscode/
+buildServer.json
