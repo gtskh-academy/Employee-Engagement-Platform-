@@ -64,3 +64,6 @@ fastlane/test_output
 # VSCode integration files
 .vscode/
 buildServer.json
+# Project-specific Xcode UI state
+EEP/EEP.xcodeproj/project.xcworkspace/xcuserdata/
+EEP/EEP.xcodeproj/project.xcworkspace/xcuserdata/*/UserInterfaceState.xcuserstate
