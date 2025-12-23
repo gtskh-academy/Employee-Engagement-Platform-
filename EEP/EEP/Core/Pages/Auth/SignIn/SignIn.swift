@@ -7,9 +7,14 @@
 import SwiftUI
 
 struct SignIn: View {
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var rememberMe: Bool = false
+    @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var viewModel: SignInViewModel
+    
+    init() {
+        let authVM = AuthViewModel()
+        _authViewModel = StateObject(wrappedValue: authVM)
+        _viewModel = StateObject(wrappedValue: SignInViewModel(authViewModel: authVM))
+    }
     
     var body: some View {
         NavigationStack {
@@ -27,34 +32,64 @@ struct SignIn: View {
                     CommonTextField(
                         title: "Email",
                         placeholder: "Enter your email",
-                        text: $email
+                        text: $viewModel.email
                     )
+                    if let emailError = viewModel.emailError {
+                        Text(emailError)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                    }
+                    
                     CommonTextField(
                         title: "Password",
                         placeholder: "Enter your password",
-                        text: $password,
+                        text: $viewModel.password,
                         isSecure: true
                     )
+                    if let passwordError = viewModel.passwordError {
+                        Text(passwordError)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                    }
+                }
+                
+                if let generalError = viewModel.generalError {
+                    Text(generalError)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
                 }
                 
                 HStack {
                     HStack(spacing: 6) {
-                        Image(systemName: rememberMe ? "checkmark.square" : "square")
-                            .onTapGesture { rememberMe.toggle() }
+                        Image(systemName: viewModel.rememberMe ? "checkmark.square" : "square")
+                            .onTapGesture { viewModel.rememberMe.toggle() }
                         Text("Remember me")
                             .font(.system(size: 14))
                             .foregroundColor(.gray)
                     }
                     Spacer()
-                    Text("Forgot Password?")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.black)
+                    NavigationLink {
+                        ForgotPasswordView()
+                    } label: {
+                        Text("Forgot Password?")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.black)
+                    }
                 }
                 .frame(maxWidth: 340)
                 
                 Spacer().frame(height: 32)
                 
-                CommonButton(title: "Sign In") { }
+                CommonButton(title: viewModel.isLoading ? "Signing In..." : "Sign In") {
+                    viewModel.signIn()
+                }
+                .disabled(viewModel.isLoading)
                 
                 HStack {
                     Text("Don't have an account?")
@@ -68,6 +103,9 @@ struct SignIn: View {
                 Spacer()
             }
             .padding(.top, 70)
+            .navigationDestination(isPresented: $viewModel.navigateToHome) {
+                MainTabView()
+            }
         }
     }
 }
