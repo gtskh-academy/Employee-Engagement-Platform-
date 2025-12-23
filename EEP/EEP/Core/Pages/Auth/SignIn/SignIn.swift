@@ -4,22 +4,19 @@
 //
 //  Created by Giga Cxadiashvili on 23.12.25.
 //
-
 import SwiftUI
-    
+
 struct SignIn: View {
-    
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var rememberMe: Bool = false
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                
                 VStack(spacing: 12) {
                     Text("Sign In")
                         .font(.system(size: 40))
-                    
                     Text("Enter your credentials to access your account")
                         .font(.system(size: 15))
                         .foregroundColor(.gray)
@@ -32,7 +29,6 @@ struct SignIn: View {
                         placeholder: "Enter your email",
                         text: $email
                     )
-                    
                     CommonTextField(
                         title: "Password",
                         placeholder: "Enter your password",
@@ -44,16 +40,12 @@ struct SignIn: View {
                 HStack {
                     HStack(spacing: 6) {
                         Image(systemName: rememberMe ? "checkmark.square" : "square")
-                            .onTapGesture {
-                                rememberMe.toggle()
-                            }
+                            .onTapGesture { rememberMe.toggle() }
                         Text("Remember me")
                             .font(.system(size: 14))
                             .foregroundColor(.gray)
                     }
-                    
                     Spacer()
-                    
                     Text("Forgot Password?")
                         .font(.system(size: 15))
                         .foregroundStyle(.black)
@@ -62,20 +54,17 @@ struct SignIn: View {
                 
                 Spacer().frame(height: 32)
                 
-                CommonButton(title: "Sign In") {
-                }
+                CommonButton(title: "Sign In") { }
                 
                 HStack {
                     Text("Don't have an account?")
                         .foregroundColor(.gray)
-                    
                     NavigationLink("Sign Up") {
                         CreateAccount()
                     }
                     .foregroundStyle(.black)
                 }
                 .font(.footnote)
-                
                 Spacer()
             }
             .padding(.top, 70)
@@ -86,4 +75,3 @@ struct SignIn: View {
 #Preview {
     SignIn()
 }
-

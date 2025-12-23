@@ -4,11 +4,9 @@
 //
 //  Created by Giga Cxadiashvili on 23.12.25.
 //
-
 import SwiftUI
-    
+
 struct CreateAccount: View {
-    
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var email: String = ""
@@ -19,10 +17,10 @@ struct CreateAccount: View {
     @State private var agreeToTerms: Bool = false
     
     private let departments = ["enginner", "designer", "manager", "marketer", "tester"]
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                
                 VStack(spacing: 25) {
                     Text("Create Account")
                         .font(.system(size: 25))
@@ -30,15 +28,13 @@ struct CreateAccount: View {
                         .font(.system(size: 18))
                         .foregroundStyle(.black.opacity(0.6))
                 }
-                
-                Spacer().frame(height: 10)
+                .padding(.top, 10)
                 
                 HStack(spacing: 10) {
                     CommonTextField(title: "First Name",
                                     placeholder: "John",
                                     text: $firstName)
                         .frame(width: 165)
-                    
                     CommonTextField(title: "Last Name",
                                     placeholder: "Doe",
                                     text: $lastName)
@@ -54,7 +50,6 @@ struct CreateAccount: View {
                                     placeholder: "+1 (000) 000-0000",
                                     text: $phoneNumber)
                         .frame(width: 230)
-                    
                     Button(action: {}) {
                         Text("Send OTP")
                             .font(.system(size: 15))
@@ -71,18 +66,13 @@ struct CreateAccount: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Department")
                         .font(.system(size: 15))
-                    
                     Menu {
                         ForEach(departments, id: \.self) { dept in
-                            Button(dept.capitalized) {
-                                selectedDepartment = dept
-                            }
+                            Button(dept.capitalized) { selectedDepartment = dept }
                         }
                     } label: {
                         HStack {
-                            Text(selectedDepartment.isEmpty
-                                 ? "Select Department"
-                                 : selectedDepartment.capitalized)
+                            Text(selectedDepartment.isEmpty ? "Select Department" : selectedDepartment.capitalized)
                             Spacer()
                             Image(systemName: "chevron.down")
                                 .foregroundColor(.gray)
@@ -106,7 +96,6 @@ struct CreateAccount: View {
                                         text: $password,
                                         isSecure: true,
                                         iconName: "questionmark.circle")
-                        
                         Text("Password must be at least 8 characters with uppercase, lowercase, and number.")
                             .font(.system(size: 13))
                             .foregroundColor(.black.opacity(0.5))
@@ -120,17 +109,13 @@ struct CreateAccount: View {
                                         text: $confrimedPassword,
                                         isSecure: true,
                                         iconName: "questionmark.circle")
-                        
                         HStack(spacing: 20) {
                             Image(systemName: agreeToTerms ? "checkmark.square" : "rectangle")
                                 .resizable()
                                 .frame(width: 18, height: 18)
                                 .bold()
                                 .padding(.bottom, 20)
-                                .onTapGesture {
-                                    agreeToTerms.toggle()
-                                }
-                            
+                                .onTapGesture { agreeToTerms.toggle() }
                             Text("I agree to the Terms of Service and Privacy Policy")
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -138,10 +123,8 @@ struct CreateAccount: View {
                         .padding(.vertical, 20)
                     }
                     
-                    CommonButton(title: "Create Account") {
-                    }
-                    .frame(width: 340)
-                    
+                    CommonButton(title: "Create Account") { }
+                        .frame(width: 340)
                     Rectangle()
                         .fill(Color.clear)
                         .frame(height: 30)
