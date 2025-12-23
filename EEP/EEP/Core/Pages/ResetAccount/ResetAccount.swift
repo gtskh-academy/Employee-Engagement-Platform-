@@ -40,7 +40,7 @@ struct ForgotPasswordView: View {
                     Spacer().frame(height: 50)
                     
                     NavigationLink("← Back to Sign in") {
-                        SignInView()
+                        SignIn()
                     }
                     .foregroundStyle(.black)
                 }
