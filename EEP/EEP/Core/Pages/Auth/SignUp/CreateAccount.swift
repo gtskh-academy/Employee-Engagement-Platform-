@@ -9,6 +9,7 @@ import SwiftUI
 struct CreateAccount: View {
     @StateObject private var viewModel = CreateAccountViewModel()
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     var body: some View {
         NavigationStack {
@@ -59,7 +60,7 @@ struct CreateAccount: View {
                     
                     HStack(spacing: 10) {
                         CommonTextField(title: "Phone Number",
-                                        placeholder: "+1 (000) 000-0000",
+                                        placeholder: "+995 555 11 11 11",
                                         text: $viewModel.phoneNumber)
                         .frame(width: 230)
                         if let error = viewModel.phoneNumberError {
@@ -69,16 +70,63 @@ struct CreateAccount: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         Button(action: { viewModel.sendOTP() }) {
-                            Text("Send OTP")
-                                .font(.system(size: 15))
-                                .bold()
-                                .foregroundStyle(.white)
-                                .frame(width: 100, height: 50)
-                                .background(Color.gray.opacity(0.5))
-                                .cornerRadius(5)
-                                .shadow(color: .gray.opacity(0.3), radius: 5)
+                            HStack {
+                                if viewModel.isSendingOTP {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                        .tint(.white)
+                                }
+                                Text(viewModel.isSendingOTP ? "Sending..." : "Send OTP")
+                                    .font(.system(size: 15))
+                                    .bold()
+                                    .foregroundStyle(.white)
+                            }
+                            .frame(width: 100, height: 50)
+                            .background(viewModel.isPhoneNumberValid && !viewModel.isSendingOTP ? Color.black : Color.gray.opacity(0.5))
+                            .cornerRadius(5)
+                            .shadow(color: .gray.opacity(0.3), radius: 5)
                         }
+                        .disabled(!viewModel.isPhoneNumberValid || viewModel.isSendingOTP)
                         .padding(.top, 25)
+                    }
+                    
+                    if viewModel.showOTP {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("⛊ Enter OTP Code")
+                                .font(.footnote)
+                                .foregroundColor(.black.opacity(0.7))
+                            OTPView(otpCode: $viewModel.otpCode) { code in
+                                viewModel.verifyOTP(code: code)
+                            }
+                            if let otpError = viewModel.otpError {
+                                Text(otpError)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding(.top, 8)
+                            }
+                            if viewModel.isVerifyingOTP {
+                                HStack {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text("Verifying...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.top, 8)
+                            }
+                            if viewModel.isPhoneVerified {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text("Phone verified")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                }
+                                .padding(.top, 8)
+                            }
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 10)
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -188,8 +236,9 @@ struct CreateAccount: View {
                 }
                 .scrollIndicators(.hidden)
             }
-            .navigationDestination(isPresented: $viewModel.navigateToSignIn) {
-                SignIn()
+            .onAppear {
+                // Pass AuthViewModel to ViewModel
+                viewModel.authViewModel = authViewModel
             }
         }
     }

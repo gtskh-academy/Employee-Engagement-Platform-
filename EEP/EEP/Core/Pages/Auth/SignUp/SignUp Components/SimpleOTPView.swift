@@ -9,6 +9,8 @@
 import SwiftUI
 
 struct OTPView: View {
+    @Binding var otpCode: String
+    var onComplete: ((String) -> Void)?
     
     @State private var otp: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedIndex: Int?
@@ -23,9 +25,15 @@ struct OTPView: View {
                     }
             }
         }
+        .onChange(of: otp) { _, _ in
+            let code = otp.joined()
+            otpCode = code
+            if code.count == 6 {
+                onComplete?(code)
+            }
+        }
     }
 
-    // ✅ აქ დეფინირებული method
     private func handleInputChange(index: Int, value: String) {
         if value.count == 1 {
             if index < 5 { focusedIndex = index + 1 }

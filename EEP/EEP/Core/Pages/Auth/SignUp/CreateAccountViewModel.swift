@@ -18,6 +18,11 @@ class CreateAccountViewModel: ObservableObject {
     @Published var confirmPassword: String = ""
     @Published var agreedToTerms: Bool = false
     @Published var showOTP: Bool = false
+    @Published var otpCode: String = ""
+    @Published var isPhoneVerified: Bool = false
+    @Published var otpError: String?
+    @Published var isSendingOTP: Bool = false
+    @Published var isVerifyingOTP: Bool = false
     
     @Published var firstNameError: String?
     @Published var lastNameError: String?
@@ -31,6 +36,8 @@ class CreateAccountViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var navigateToSignIn: Bool = false
     @Published var generalError: String?
+    
+    var authViewModel: AuthViewModel?
     
     let departments = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations"]
     
@@ -71,9 +78,10 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func validatePhoneNumber() -> Bool {
+        // Phone number is optional - if empty, it's valid
         if phoneNumber.isEmpty {
-            phoneNumberError = "Phone number is required"
-            return false
+            phoneNumberError = nil
+            return true
         }
         
         // Remove spaces, dashes, and other formatting characters
@@ -145,10 +153,13 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func validateAll() -> Bool {
+        // Phone number is optional, but if provided, it must be valid
+        let phoneValid = phoneNumber.isEmpty || validatePhoneNumber()
+        
         let isValid = validateFirstName() &&
                      validateLastName() &&
                      validateEmail() &&
-                     validatePhoneNumber() &&
+                     phoneValid &&
                      validateDepartment() &&
                      validatePassword() &&
                      validateConfirmPassword() &&
@@ -157,10 +168,115 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func sendOTP() {
-        if validateEmail() && validatePhoneNumber() {
-            // Dummy OTP sending - just show OTP screen
-            showOTP = true
+        // Phone number must be provided and valid to send OTP
+        guard !phoneNumber.isEmpty else {
+            phoneNumberError = "Phone number is required to send OTP"
+            return
         }
+        
+        guard validatePhoneNumber() else {
+            return
+        }
+        
+        isSendingOTP = true
+        otpError = nil
+        
+        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
+        
+        let request = SendPhoneCodeRequest(phoneNumber: cleanedPhone)
+        
+        Task {
+            do {
+                try await AuthService.shared.sendPhoneCode(request)
+                
+                await MainActor.run {
+                    self.isSendingOTP = false
+                    self.showOTP = true
+                    self.otpCode = ""
+                }
+            } catch {
+                await MainActor.run {
+                    self.isSendingOTP = false
+                    
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.otpError = message
+                        case .invalidResponse:
+                            self.otpError = "Invalid response from server"
+                        }
+                    } else {
+                        self.otpError = "Failed to send OTP: \(error.localizedDescription)"
+                    }
+                }
+            }
+        }
+    }
+    
+    func verifyOTP(code: String) {
+        guard !code.isEmpty, code.count == 6 else {
+            otpError = "Please enter a valid 6-digit code"
+            return
+        }
+        
+        isVerifyingOTP = true
+        otpError = nil
+        
+        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
+        
+        let request = VerifyPhoneRequest(phoneNumber: cleanedPhone, code: code)
+        
+        Task {
+            do {
+                try await AuthService.shared.verifyPhone(request)
+                
+                await MainActor.run {
+                    self.isVerifyingOTP = false
+                    self.isPhoneVerified = true
+                    self.otpCode = code
+                }
+            } catch {
+                await MainActor.run {
+                    self.isVerifyingOTP = false
+                    
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.otpError = message
+                        case .invalidResponse:
+                            self.otpError = "Invalid response from server"
+                        }
+                    } else {
+                        self.otpError = "Failed to verify OTP: \(error.localizedDescription)"
+                    }
+                }
+            }
+        }
+    }
+    
+    var isPhoneNumberValid: Bool {
+        // Phone is optional - if empty, button should be disabled
+        guard !phoneNumber.isEmpty else {
+            return false
+        }
+        
+        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
+        
+        let phoneRegex = "^5[0-9]{8}$"
+        let phonePredicate = NSPredicate(format:"SELF MATCHES %@", phoneRegex)
+        return phonePredicate.evaluate(with: cleanedPhone)
     }
     
     func createAccount() {
@@ -168,15 +284,28 @@ class CreateAccountViewModel: ObservableObject {
             return
         }
         
+        // Phone verification is only required if phone number is provided
+        if !phoneNumber.isEmpty && !isPhoneVerified {
+            generalError = "Please verify your phone number with OTP"
+            return
+        }
+        
         isLoading = true
         generalError = nil
+        
+        // Clean phone number before sending (or use empty string if not provided)
+        let cleanedPhone = phoneNumber.isEmpty ? "" : phoneNumber.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
         
         let request = RegisterRequest(
             email: email,
             password: password,
             firstName: firstName,
             lastName: lastName,
-            phoneNumber: phoneNumber,
+            phoneNumber: cleanedPhone,
             department: selectedDepartment
         )
         
@@ -192,8 +321,12 @@ class CreateAccountViewModel: ObservableObject {
                         department: selectedDepartment
                     )
                     
+                    // Update AuthViewModel if available
+                    self.authViewModel?.isAuthenticated = true
+                    self.authViewModel?.currentUser = TokenManager.shared.currentUser
+                    
                     self.isLoading = false
-                    self.navigateToSignIn = true
+                    // Don't navigate to SignIn - ContentView will handle navigation based on auth state
                 }
             } catch {
                 await MainActor.run {

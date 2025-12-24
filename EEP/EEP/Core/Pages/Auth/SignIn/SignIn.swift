@@ -7,13 +7,14 @@
 import SwiftUI
 
 struct SignIn: View {
-    @StateObject private var authViewModel = AuthViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel: SignInViewModel
     
     init() {
-        let authVM = AuthViewModel()
-        _authViewModel = StateObject(wrappedValue: authVM)
-        _viewModel = StateObject(wrappedValue: SignInViewModel(authViewModel: authVM))
+        // Create a temporary AuthViewModel for SignInViewModel initialization
+        // This will be replaced by the environment object in onAppear
+        let tempAuthVM = AuthViewModel()
+        _viewModel = StateObject(wrappedValue: SignInViewModel(authViewModel: tempAuthVM))
     }
     
     var body: some View {
@@ -96,6 +97,7 @@ struct SignIn: View {
                         .foregroundColor(.gray)
                     NavigationLink("Sign Up") {
                         CreateAccount()
+                            .environmentObject(authViewModel)
                     }
                     .foregroundStyle(.black)
                 }
@@ -103,8 +105,9 @@ struct SignIn: View {
                 Spacer()
             }
             .padding(.top, 70)
-            .navigationDestination(isPresented: $viewModel.navigateToHome) {
-                MainTabView()
+            .onAppear {
+                // Update SignInViewModel to use the environment AuthViewModel
+                viewModel.authViewModel = authViewModel
             }
         }
     }

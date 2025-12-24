@@ -22,7 +22,7 @@ class SignInViewModel: ObservableObject {
     @Published var navigateToSignUp: Bool = false
     @Published var navigateToHome: Bool = false
     
-    private let authViewModel: AuthViewModel
+    var authViewModel: AuthViewModel
     
     init(authViewModel: AuthViewModel) {
         self.authViewModel = authViewModel
@@ -91,7 +91,7 @@ class SignInViewModel: ObservableObject {
                     }
                     
                     self.isLoading = false
-                    self.navigateToHome = true
+                    // ContentView will automatically switch to MainTabView when isAuthenticated changes
                 }
             } catch {
                 await MainActor.run {

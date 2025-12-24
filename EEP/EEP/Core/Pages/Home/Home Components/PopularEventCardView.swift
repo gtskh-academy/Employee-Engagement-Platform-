@@ -8,20 +8,26 @@
 import SwiftUI
 
 struct PopularEventCardView: View {
-    let event: SimpleEvent
+    let event: TrendingEvent
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            
-            // Image placeholder
-            ZStack {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                Text("Event Image")
-                    .foregroundColor(.white)
-                    .font(.system(size: 14))
+            // Cached image with placeholder
+            CachedAsyncImage(url: event.imageUrl) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                    Image(systemName: "photo")
+                        .foregroundColor(.white)
+                        .font(.system(size: 24))
+                }
             }
-            .frame(width: .infinity,height: 140)
+            .frame(width: 200, height: 140)
+            .clipped()
             .cornerRadius(12)
             
             Text(event.title)
@@ -31,7 +37,7 @@ struct PopularEventCardView: View {
             HStack(spacing: 6) {
                 Image(systemName: "calendar")
                     .font(.system(size: 14))
-                Text(event.date)
+                Text(event.formattedDate.isEmpty ? "Date TBD" : event.formattedDate)
                     .font(.system(size: 14))
             }
             .foregroundColor(.gray)

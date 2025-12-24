@@ -8,12 +8,15 @@
 import SwiftUI
 
 struct HomeView: View {
+    @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State var eventArray = Event.array
     let columns: [GridItem] = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
+         GridItem(.flexible(), spacing: 16),
+         GridItem(.flexible(), spacing: 16),
+         GridItem(.flexible(), spacing: 16)
+     ]
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -23,7 +26,7 @@ struct HomeView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading) {
-                        Text("Welcome Back,Sarah")
+                        Text("Welcome Back, \(viewModel.currentUser?.firstName ?? "User")")
                             .font(.title)
                         Text("Stay connected with upcoming company events and activities.")
                             .foregroundStyle(.black.opacity(0.7))
@@ -91,10 +94,30 @@ struct HomeView: View {
                             Text("Trending Events")
                                 .font(.title2)
                             Text("Popular events with high registration rates")
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                LazyHStack(spacing: 16) {
-                                    ForEach(popularEvents) { event in
-                                        PopularEventCardView(event: event)
+                            if viewModel.isLoading {
+                                HStack {
+                                    ProgressView()
+                                    Text("Loading...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding()
+                            } else if let error = viewModel.errorMessage {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding()
+                            } else if viewModel.trendingEvents.isEmpty {
+                                Text("No trending events available at the moment.")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding()
+                            } else {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    LazyHStack(spacing: 16) {
+                                        ForEach(viewModel.trendingEvents) { event in
+                                            PopularEventCardView(event: event)
+                                        }
                                     }
                                 }
                             }
@@ -111,6 +134,10 @@ struct HomeView: View {
             }
             .navigationBarHidden(true)
             .padding(.bottom,40)
+            .onAppear {
+                viewModel.loadTrendingEvents()
+                viewModel.loadCurrentUser()
+            }
         }
     }
 }

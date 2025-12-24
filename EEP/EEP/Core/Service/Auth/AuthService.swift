@@ -78,6 +78,97 @@ struct AuthService {
             throw NetworkError.serverError(message)
         }
     }
+    
+    func sendPhoneCode(_ requestBody: SendPhoneCodeRequest) async throws {
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/Auth/send-phone-code"))
+        request.httpMethod = "POST"
+        request.setValue("*/*", forHTTPHeaderField: "accept")
+        request.setValue("application/json-patch+json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        request.httpBody = try encoder.encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            // Success - OTP sent
+            return
+        case 400:
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Bad request"
+            throw NetworkError.serverError(errorMessage)
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
+    
+    func verifyPhone(_ requestBody: VerifyPhoneRequest) async throws {
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/Auth/verify-phone"))
+        request.httpMethod = "POST"
+        request.setValue("*/*", forHTTPHeaderField: "accept")
+        request.setValue("application/json-patch+json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        request.httpBody = try encoder.encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            // Success - Phone verified
+            return
+        case 400:
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Invalid code"
+            throw NetworkError.serverError(errorMessage)
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
+    
+    func getCurrentUser() async throws -> User {
+        guard let token = TokenManager.shared.token else {
+            throw NetworkError.serverError("Not authenticated")
+        }
+        
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/Auth/me"))
+        request.httpMethod = "GET"
+        request.setValue("text/plain", forHTTPHeaderField: "accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            let decoder = JSONDecoder()
+            do {
+                let user = try decoder.decode(User.self, from: data)
+                // Update TokenManager with the fetched user data
+                TokenManager.shared.currentUser = user
+                return user
+            } catch {
+                throw NetworkError.serverError("Failed to parse response: \(error.localizedDescription)")
+            }
+        case 401:
+            throw NetworkError.serverError("Unauthorized")
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
 }
 
 

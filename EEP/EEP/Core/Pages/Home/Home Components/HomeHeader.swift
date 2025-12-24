@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct HomeHeader: View {
-    
     var body: some View {
         HStack {
             Image(systemName: "calendar")
@@ -37,6 +36,5 @@ struct HomeHeader: View {
                 .frame(width: 36, height: 36)
                 .clipShape(Circle())
         }
-        
     }
 }
