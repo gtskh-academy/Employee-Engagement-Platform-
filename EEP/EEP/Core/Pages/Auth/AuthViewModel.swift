@@ -12,24 +12,18 @@ class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
     @Published var currentUser: User?
     
-    private let userDefaultsKey = "isUserLoggedIn"
-    private let userEmailKey = "userEmail"
-    
     init() {
         checkAuthenticationState()
     }
     
     func checkAuthenticationState() {
-        isAuthenticated = UserDefaults.standard.bool(forKey: userDefaultsKey)
-        if isAuthenticated {
-            // Load user data if needed
-            _ = UserDefaults.standard.string(forKey: userEmailKey)
-            // Load user from storage or API
-        }
+        isAuthenticated = TokenManager.shared.isTokenValid
+        currentUser = TokenManager.shared.currentUser
     }
     
+    // for backward compatibility but may be removed
     func login(email: String, password: String) -> AuthResult {
-        // Dummy validation - replace with actual API call
+        // keeping for backward compatibility
         if email.isEmpty || password.isEmpty {
             return .failure(.emptyFields)
         }
@@ -38,23 +32,11 @@ class AuthViewModel: ObservableObject {
             return .failure(.invalidEmail)
         }
         
-        // Dummy authentication - replace with actual API call
-        // For now, accept any non-empty email/password
-        if password.count < 6 {
-            return .failure(.wrongCredentials)
-        }
-        
-        // Successful login
-        UserDefaults.standard.set(true, forKey: userDefaultsKey)
-        UserDefaults.standard.set(email, forKey: userEmailKey)
-        isAuthenticated = true
-        
-        return .success
+        return .failure(.wrongCredentials)
     }
     
     func logout() {
-        UserDefaults.standard.set(false, forKey: userDefaultsKey)
-        UserDefaults.standard.removeObject(forKey: userEmailKey)
+        TokenManager.shared.clear()
         isAuthenticated = false
         currentUser = nil
     }

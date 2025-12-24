@@ -29,6 +29,8 @@ class CreateAccountViewModel: ObservableObject {
     @Published var termsError: String?
     
     @Published var isLoading: Bool = false
+    @Published var navigateToSignIn: Bool = false
+    @Published var generalError: String?
     
     let departments = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations"]
     
@@ -74,12 +76,19 @@ class CreateAccountViewModel: ObservableObject {
             return false
         }
         
-        // Basic phone validation
-        let phoneRegex = "^[0-9]{10,}$"
+        // Remove spaces, dashes, and other formatting characters
+        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
+        
+        // Phone number must start with 5 and have exactly 9 digits
+        let phoneRegex = "^5[0-9]{8}$"
         let phonePredicate = NSPredicate(format:"SELF MATCHES %@", phoneRegex)
         
-        if !phonePredicate.evaluate(with: phoneNumber.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")) {
-            phoneNumberError = "Invalid phone number"
+        if !phonePredicate.evaluate(with: cleanedPhone) {
+            phoneNumberError = "Phone number must start with 5 and have exactly 9 digits"
             return false
         }
         
@@ -160,11 +169,48 @@ class CreateAccountViewModel: ObservableObject {
         }
         
         isLoading = true
+        generalError = nil
         
-        // Dummy account creation - replace with actual API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.isLoading = false
-            // On success, navigate to sign in or home
+        let request = RegisterRequest(
+            email: email,
+            password: password,
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+            department: selectedDepartment
+        )
+        
+        Task {
+            do {
+                let response = try await AuthService.shared.register(request)
+                
+                await MainActor.run {
+                    // Save token and user info
+                    TokenManager.shared.saveAuthResponse(
+                        response,
+                        phoneNumber: phoneNumber,
+                        department: selectedDepartment
+                    )
+                    
+                    self.isLoading = false
+                    self.navigateToSignIn = true
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.generalError = message
+                        case .invalidResponse:
+                            self.generalError = "Invalid response from server"
+                        }
+                    } else {
+                        self.generalError = "Failed to create account: \(error.localizedDescription)"
+                    }
+                }
+            }
         }
     }
     
@@ -177,6 +223,7 @@ class CreateAccountViewModel: ObservableObject {
         passwordError = nil
         confirmPasswordError = nil
         termsError = nil
+        generalError = nil
     }
 }
 

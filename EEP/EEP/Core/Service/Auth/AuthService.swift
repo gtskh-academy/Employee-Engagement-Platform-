@@ -1,0 +1,83 @@
+//
+//  AuthService.swift
+//  EEP
+//
+//  Created by Giga Cxadiashvili on 23.12.25.
+//
+
+import Foundation
+
+struct AuthService {
+    static let shared = AuthService()
+    
+    private let baseURL = URL(string: "http://34.52.231.181:8080")!
+    
+    func register(_ requestBody: RegisterRequest) async throws -> RegisterResponse {
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/Auth/register"))
+        request.httpMethod = "POST"
+        request.setValue("text/plain", forHTTPHeaderField: "accept")
+        request.setValue("application/json-patch+json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        request.httpBody = try encoder.encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            // Parse JSON response
+            let decoder = JSONDecoder()
+            do {
+                let registerResponse = try decoder.decode(RegisterResponse.self, from: data)
+                return registerResponse
+            } catch {
+                throw NetworkError.serverError("Failed to parse response: \(error.localizedDescription)")
+            }
+        case 400:
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Bad request"
+            throw NetworkError.serverError(errorMessage)
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
+    
+    func login(_ requestBody: LoginRequest) async throws -> RegisterResponse {
+        var request = URLRequest(url: baseURL.appendingPathComponent("/api/Auth/login"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        request.httpBody = try encoder.encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            // Parse JSON response
+            let decoder = JSONDecoder()
+            do {
+                let loginResponse = try decoder.decode(RegisterResponse.self, from: data)
+                return loginResponse
+            } catch {
+                throw NetworkError.serverError("Failed to parse response: \(error.localizedDescription)")
+            }
+        case 400, 401:
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Invalid email or password"
+            throw NetworkError.serverError(errorMessage)
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
+}
+
+

@@ -71,27 +71,46 @@ class SignInViewModel: ObservableObject {
         isLoading = true
         generalError = nil
         
-        // Use AuthViewModel for authentication
-        let result = authViewModel.login(email: email, password: password)
+        let request = LoginRequest(email: email, password: password)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.isLoading = false
-            
-            switch result {
-            case .success:
-                if self.rememberMe {
-                    // Save remember me preference
-                    UserDefaults.standard.set(true, forKey: "rememberMe")
+        Task {
+            do {
+                let response = try await AuthService.shared.login(request)
+                
+                await MainActor.run {
+                    // Save token and user info
+                    TokenManager.shared.saveAuthResponse(response)
+                    
+                    // Update AuthViewModel state
+                    self.authViewModel.isAuthenticated = true
+                    self.authViewModel.currentUser = TokenManager.shared.currentUser
+                    
+                    if self.rememberMe {
+                        // Save remember me preference
+                        UserDefaults.standard.set(true, forKey: "rememberMe")
+                    }
+                    
+                    self.isLoading = false
+                    self.navigateToHome = true
                 }
-                self.navigateToHome = true
-            case .failure(let error):
-                switch error {
-                case .emptyFields:
-                    self.generalError = "Please fill in all fields"
-                case .invalidEmail:
-                    self.emailError = "Invalid email format"
-                case .wrongCredentials:
-                    self.generalError = "Invalid email or password"
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            if message.lowercased().contains("invalid") || message.lowercased().contains("password") || message.lowercased().contains("email") {
+                                self.generalError = "Invalid email or password"
+                            } else {
+                                self.generalError = message
+                            }
+                        case .invalidResponse:
+                            self.generalError = "Invalid response from server"
+                        }
+                    } else {
+                        self.generalError = "Failed to sign in: \(error.localizedDescription)"
+                    }
                 }
             }
         }
