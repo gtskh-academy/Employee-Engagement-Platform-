@@ -62,6 +62,12 @@ struct CreateAccount: View {
                     }
                     .padding(.top, 25)
                 }
+                VStack(alignment: .leading) {
+                    Text("⛊ Enter OTP Code")
+                        .font(.footnote)
+                    OTPView()
+
+                }
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Department")
