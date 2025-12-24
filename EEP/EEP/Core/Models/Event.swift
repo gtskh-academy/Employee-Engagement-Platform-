@@ -13,13 +13,13 @@ struct Event: Identifiable,Codable {
     // Date
     let day: Int
     let month: String
-    
+    let year: Int
     // Main info
     let title: String
     let startTime: String
     let endTime: String
     let location: String
-    
+    let eventCategory: String
     // Description
     let description: String
     let status: EventStatus
@@ -28,9 +28,9 @@ struct Event: Identifiable,Codable {
     
     static let array: [Event] = [
         Event(
-        id: UUID(),day: 24,month: "JAN",title: "Happy Friday: Game Night",startTime: "06:00 ",endTime: "09:00 ",location: "Recreation Lounge",description: "Unwind after a productive week with board games and video games.",status: .waitlisted,registeredCount: 30,isFull: true),
-        Event(id: UUID(),day: 26,month: "JAN",title: "iOS Study Jam",startTime: "04:00 ",endTime: "06:00 ",location: "Room 201",description: "Hands-on session to practice SwiftUI and iOS fundamentals together.",status: .open,registeredCount: 18,isFull: false),
-        Event(id: UUID(),day: 28,month: "JAN",title: "Tech Talk: Future of AI",startTime: "05:30 ",endTime: "07:00 ",location: "Main Hall",description: "Join us for a talk on trends and real-world applications of AI.",status: .open,registeredCount: 42,isFull: false)]
+            id: UUID(),day: 24,month: "JAN", year: 2025 ,title: "Happy Friday: Game Night",startTime: "06:00 ",endTime: "09:00 ",location: "Recreation Lounge", eventCategory: "workshop",description: "Unwind after a productive week with board games and video games.",status: .waitlisted,registeredCount: 30,isFull: true),
+        Event(id: UUID(),day: 26,month: "JAN", year: 2025,title: "iOS Study Jam",startTime: "04:00 ",endTime: "06:00 ",location: "Room 201", eventCategory: "wellnes",description: "Hands-on session to practice SwiftUI and iOS fundamentals together.",status: .open,registeredCount: 18,isFull: false),
+        Event(id: UUID(),day: 28,month: "JAN", year: 2025,title: "Tech Talk: Future of AI",startTime: "05:30 ",endTime: "07:00 ",location: "Main Hall", eventCategory: "cultural",description: "Join us for a talk on trends and real-world applications of AI.",status: .open,registeredCount: 42,isFull: false)]
 }
 enum EventStatus: String, Codable {
     case waitlisted = "Waitlisted"
@@ -49,3 +49,13 @@ let popularEvents: [SimpleEvent] = [
     SimpleEvent(title: "Annual Meetup", date: "Feb 2, 2025"),
     SimpleEvent(title: "Startup Pitch Night", date: "Feb 10, 2025")
 ]
+
+import Foundation
+
+extension Event {
+    func eventDate(year: Int = 2025) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy"
+        return formatter.date(from: "\(day) \(month) \(year)")
+    }
+}
