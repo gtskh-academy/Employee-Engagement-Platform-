@@ -19,7 +19,7 @@ struct ProfileView: View {
                     VStack(spacing: 16) {
                         Image("PersonIcon")
                             .resizable()
-                            .frame(width: 80, height: 80)
+                            .frame(width: 60, height: 60)
                             .foregroundColor(.gray)
                         
                         if viewModel.isLoading {

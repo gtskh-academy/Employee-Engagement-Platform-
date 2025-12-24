@@ -31,11 +31,11 @@ struct MyEventsHeaderView: View {
                 .frame(width: 400, height: 2)
             VStack(alignment: .leading) {
                 Text("Next Upcoming Events")
-                    .font(.title2)
+                    .font(.callout)
                     .foregroundStyle(.black.opacity(0.6))
                 ZStack {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(Color.gray.opacity(0.08))
                         .frame(width: 370, height: 250)
                         .cornerRadius(10)
                     VStack(alignment: .leading,spacing: 5) {
@@ -56,7 +56,7 @@ struct MyEventsHeaderView: View {
                         }
                         ZStack {
                             Rectangle()
-                                .fill(.gray)
+                                .fill(.gray.opacity(0.5))
                                 .frame(width: 350, height: 140)
                                 .cornerRadius(10)
                             Text("Map Preview of Event Location")

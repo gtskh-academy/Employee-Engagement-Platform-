@@ -72,7 +72,7 @@ struct EventDetailView: View {
                         Text("Registration closes on Dec 19, 2025 at 5:00 PM.")
                             .font(.caption)
                             .foregroundColor(.gray)
-                            .padding(.top, 4)
+                            .padding(.top, 1)
                         
                         Divider()
                             .padding(.vertical, 8)

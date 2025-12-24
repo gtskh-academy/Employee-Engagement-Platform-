@@ -40,7 +40,7 @@ struct MyEventsView: View {
                 ForEach(events) { event in
                     ZStack {
                         Rectangle()
-                            .fill(Color.gray.opacity(0.3))
+                            .fill(Color.gray.opacity(0.1))
                             .frame(width: 350, height: 120)
                             .cornerRadius(10)
                         

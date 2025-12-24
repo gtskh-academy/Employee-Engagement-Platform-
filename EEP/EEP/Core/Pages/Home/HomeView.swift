@@ -81,7 +81,7 @@ struct HomeView: View {
                             
                         }
                         VStack(alignment: .leading) {
-                            Text("Broswe By Category")
+                            Text("Browse By Category")
                                 .font(.title2)
                             LazyVGrid(columns: columns, spacing: 16) {
                                 ForEach(Category.mock) { category in

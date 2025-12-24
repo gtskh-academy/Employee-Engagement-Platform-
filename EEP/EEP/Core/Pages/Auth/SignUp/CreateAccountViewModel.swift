@@ -321,6 +321,9 @@ class CreateAccountViewModel: ObservableObject {
                         department: selectedDepartment
                     )
                     
+                    // Debug: Print token
+                    print("🔑 Create Account Token: \(response.token)")
+                    
                     // Update AuthViewModel if available
                     self.authViewModel?.isAuthenticated = true
                     self.authViewModel?.currentUser = TokenManager.shared.currentUser

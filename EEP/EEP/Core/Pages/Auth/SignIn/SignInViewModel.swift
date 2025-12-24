@@ -81,6 +81,9 @@ class SignInViewModel: ObservableObject {
                     // Save token and user info
                     TokenManager.shared.saveAuthResponse(response)
                     
+                    // Debug: Print token
+                    print("🔑 Sign In Token: \(response.token)")
+                    
                     // Update AuthViewModel state
                     self.authViewModel.isAuthenticated = true
                     self.authViewModel.currentUser = TokenManager.shared.currentUser
