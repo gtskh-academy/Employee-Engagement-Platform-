@@ -169,6 +169,46 @@ struct AuthService {
             throw NetworkError.serverError(message)
         }
     }
+    
+    func getDepartments(onlyActive: Bool = true) async throws -> [Department] {
+        var urlComponents = URLComponents(url: baseURL.appendingPathComponent("/api/Departments"), resolvingAgainstBaseURL: false)!
+        urlComponents.queryItems = [URLQueryItem(name: "onlyActive", value: "\(onlyActive)")]
+        
+        guard let url = urlComponents.url else {
+            throw NetworkError.serverError("Invalid URL")
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("text/plain", forHTTPHeaderField: "accept")
+        
+        // Add token if available (for authenticated requests)
+        if let token = TokenManager.shared.token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200..<300:
+            let decoder = JSONDecoder()
+            do {
+                let departments = try decoder.decode([Department].self, from: data)
+                return departments
+            } catch {
+                throw NetworkError.serverError("Failed to parse response: \(error.localizedDescription)")
+            }
+        case 401:
+            throw NetworkError.serverError("Unauthorized")
+        default:
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError(message)
+        }
+    }
 }
 
 

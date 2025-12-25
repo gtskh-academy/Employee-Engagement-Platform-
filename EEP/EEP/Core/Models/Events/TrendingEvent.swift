@@ -83,6 +83,51 @@ struct TrendingEvent: Identifiable, Codable {
         }
         return ""
     }
+    
+    // Computed property for start time
+    var startTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        
+        if let date = formatter.date(from: startDateTime) {
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HH:mm"
+            return timeFormatter.string(from: date)
+        }
+        return ""
+    }
+    
+    // Computed property for end time (assuming 2 hours duration for now, or use API if available)
+    var endTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        
+        if let date = formatter.date(from: startDateTime) {
+            let endDate = date.addingTimeInterval(2 * 60 * 60) // Add 2 hours
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HH:mm"
+            return timeFormatter.string(from: endDate)
+        }
+        return ""
+    }
+    
+    // Computed property for location string
+    var locationString: String {
+        guard let location = location else { return "Location TBD" }
+        if let venueName = location.venueName, !venueName.isEmpty {
+            return venueName
+        } else if let address = location.address, !address.isEmpty {
+            return address
+        } else if let city = location.city, !city.isEmpty {
+            return city
+        }
+        return "Location TBD"
+    }
+    
+    // Computed property for description (use title if description not available)
+    var descriptionText: String {
+        return title // For now, use title. Can be updated if API provides description
+    }
 }
 
 struct EventLocation: Codable {

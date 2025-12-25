@@ -19,6 +19,11 @@ class AuthViewModel: ObservableObject {
     func checkAuthenticationState() {
         isAuthenticated = TokenManager.shared.isTokenValid
         currentUser = TokenManager.shared.currentUser
+        if let token = TokenManager.shared.token {
+            print("🔑 Current Token (from checkAuthenticationState): \(token)")
+        } else {
+            print("🔑 No token found - user not authenticated")
+        }
     }
     
     // for backward compatibility but may be removed

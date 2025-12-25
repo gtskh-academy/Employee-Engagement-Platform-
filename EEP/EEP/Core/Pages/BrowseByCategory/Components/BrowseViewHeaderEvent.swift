@@ -10,7 +10,7 @@
 import SwiftUI
 
 struct BrowseViewHeaderEvent: View {
-    @State var searchEvent: String = ""
+    @Binding var searchText: String
     var body: some View {
        
             VStack {
@@ -23,7 +23,7 @@ struct BrowseViewHeaderEvent: View {
                         .frame(width: 25,height: 30)
                 }.padding(.horizontal)
                 HStack(spacing: 30) {
-                    TextField("🔎︎ Search Events..", text: $searchEvent)
+                    TextField("🔎︎ Search Events..", text: $searchText)
                         .padding()
                         .frame(width: 250,height: 45)
                         .border(.gray, width: 1)
@@ -56,5 +56,5 @@ struct BrowseViewHeaderEvent: View {
 }
 
 #Preview {
-    Browse()
+    BrowseByCategory()
 }

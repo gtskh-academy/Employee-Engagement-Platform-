@@ -133,12 +133,18 @@ struct CreateAccount: View {
                         Text("Department")
                             .font(.system(size: 15))
                         Menu {
-                            ForEach(viewModel.departments, id: \.self) { dept in
-                                Button(dept.capitalized) { viewModel.selectedDepartment = dept }
+                            if viewModel.isLoadingDepartments {
+                                ProgressView()
+                            } else {
+                                ForEach(viewModel.departments) { dept in
+                                    Button(dept.name) {
+                                        viewModel.selectedDepartment = dept
+                                    }
+                                }
                             }
                         } label: {
                             HStack {
-                                Text(viewModel.selectedDepartment.isEmpty ? "Select Department" : viewModel.selectedDepartment.capitalized)
+                                Text(viewModel.selectedDepartment?.name ?? "Select Department")
                                 Spacer()
                                 Image(systemName: "chevron.down")
                                     .foregroundColor(.gray)
@@ -239,6 +245,8 @@ struct CreateAccount: View {
             .onAppear {
                 // Pass AuthViewModel to ViewModel
                 viewModel.authViewModel = authViewModel
+                // Load departments from API
+                viewModel.loadDepartments()
             }
         }
     }

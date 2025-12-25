@@ -8,83 +8,164 @@
 import SwiftUI
 
 struct MyEventsView: View {
-    var events = Event.array
-    @State private var selectedDates: Set<DateComponents> = []
+    @StateObject private var viewModel = MyEventsViewModel()
+    @State private var selectedMode: EventsViewMode = .list
+    @State private var selectedDate: Date = Date()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 
-                MyEventsHeaderView()
+                MyEventsHeaderView(selectedMode: $selectedMode)
                     .padding(.bottom, 20)
                 
-                Rectangle()
-                    .fill(Color.gray.opacity(0.5))
-                    .frame(width: 400, height: 2)
-                
-                MultiDatePicker(
-                    "Select Date",
-                    selection: $selectedDates
-                )
-                .frame(width: 350)
-                .padding()
-                
-                Rectangle()
-                    .fill(Color.gray.opacity(0.5))
-                    .frame(width: 400, height: 2)
-                
-                Text("Events on Tuesday, Dec 16")
-                    .font(.title2)
-                    .foregroundStyle(.black.opacity(0.6))
-                    .padding(.trailing,120)
-                ForEach(events) { event in
-                    ZStack {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.1))
-                            .frame(width: 350, height: 120)
-                            .cornerRadius(10)
-                        
-                        HStack(spacing: 20) {
-
-                            // TIME COLUMN (fixed width)
-                            VStack {
-                                Text(event.startTime)
-                                Text("AM")
-                            }
-                            .frame(width: 50)
-                            .padding(.leading,10)
-                            .padding(.bottom,40)
-
-                            Rectangle()
-                                .fill(Color.black.opacity(0.7))
-                                .frame(width: 2, height: 100)
-                                .fixedSize()
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(event.title)
-                                    .lineLimit(2)
-                                    .truncationMode(.tail)
-
-                                HStack {
-                                    Image(systemName: "rectangle.badge.person.crop")
-                                        .resizable()
-                                        .frame(width: 18, height: 15)
-                                    Text(event.eventCategory)
-                                        .font(.footnote)
-                                }
-
-                                Text(event.location)
-                                    .font(.footnote)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 10)
-                            .padding(.bottom,30)
-                        }
-                        .frame(width: 350) 
-                    }
+                if selectedMode == .list {
+                    listView
+                } else {
+                    calendarView
                 }
             }
             .padding(.vertical)
+        }
+        .onAppear {
+            viewModel.loadEvents()
+        }
+    }
+    
+    @ViewBuilder
+    private var listView: some View {
+        if viewModel.isLoading {
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Loading events...")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(.top, 100)
+        } else if let error = viewModel.errorMessage {
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle")
+                    .resizable()
+                    .frame(width: 60, height: 60)
+                    .foregroundColor(.red)
+                Text("Error")
+                    .font(.title2)
+                    .foregroundColor(.red)
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.top, 100)
+            .padding(.horizontal)
+        } else if viewModel.events.isEmpty {
+            VStack(spacing: 12) {
+                Image(systemName: "calendar.badge.exclamationmark")
+                    .resizable()
+                    .frame(width: 60, height: 60)
+                    .foregroundColor(.gray)
+                Text("No Events")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+                Text("You haven't registered for any events yet.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.top, 100)
+        } else {
+            VStack(spacing: 16) {
+                ForEach(viewModel.events) { event in
+                    MyEventListItemView(event: event)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    @ViewBuilder
+    private var calendarView: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Next Upcoming Events section
+            if let firstEvent = viewModel.events.first {
+                VStack(alignment: .leading) {
+                    Text("Next Upcoming Events")
+                        .font(.callout)
+                        .foregroundStyle(.black.opacity(0.6))
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.08))
+                            .frame(width: 370, height: 250)
+                            .cornerRadius(10)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(firstEvent.title)
+                                .font(.title3)
+                            HStack(spacing: 5) {
+                                Image("Event")
+                                Text(firstEvent.month)
+                                Text("\(firstEvent.day),")
+                                Text("\(firstEvent.year),")
+                                Text("\(firstEvent.startTime) - \(firstEvent.endTime),")
+                            }
+                            HStack {
+                                Image("map")
+                                    .resizable()
+                                    .frame(width: 10, height: 10)
+                                Text(firstEvent.locationString)
+                            }
+                            ZStack {
+                                Rectangle()
+                                    .fill(.gray.opacity(0.5))
+                                    .frame(width: 350, height: 140)
+                                    .cornerRadius(10)
+                                Text("Map Preview of Event Location")
+                            }
+                        }
+                        .font(.footnote)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            Rectangle()
+                .fill(Color.gray.opacity(0.5))
+                .frame(width: 400, height: 2)
+            
+            // Custom Calendar with event indicators
+            CustomCalendarView(
+                selectedDate: $selectedDate,
+                eventDates: viewModel.getEventDates()
+            )
+            .padding()
+            
+            Rectangle()
+                .fill(Color.gray.opacity(0.5))
+                .frame(width: 400, height: 2)
+            
+            // Events for selected date
+            let selectedDateEvents = viewModel.getEvents(for: selectedDate)
+            if !selectedDateEvents.isEmpty {
+                Text("Events on \(viewModel.getFormattedDateString(for: selectedDate))")
+                    .font(.title3)
+                    .foregroundStyle(.black.opacity(0.6))
+                    .padding(.leading)
+                    .padding(.trailing, 120)
+                
+                EventDayListView(events: selectedDateEvents)
+                    .padding(.leading)
+            } else {
+                Text("Events on \(viewModel.getFormattedDateString(for: selectedDate))")
+                    .font(.title3)
+                    .foregroundStyle(.black.opacity(0.6))
+                    .padding(.leading)
+                    .padding(.trailing, 120)
+                
+                Text("No events on this date")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.leading)
+                    .padding(.vertical)
+            }
         }
     }
 }

@@ -10,7 +10,6 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State var eventArray = Event.array
     let columns: [GridItem] = [
          GridItem(.flexible(), spacing: 16),
          GridItem(.flexible(), spacing: 16),
@@ -36,56 +35,62 @@ struct HomeView: View {
                             Text("Upcoming Events")
                                 .font(.title2)
                             Spacer()
-                            Text("View all")
+                            Button(action: {
+                                viewModel.showAllEventsSheet = true
+                            }) {
+                                Text("View all")
+                                    .foregroundColor(.black)
+                            }
                         }
                         VStack {
-                            ForEach(eventArray) { array in
-                                ZStack {
-                                    Rectangle()
-                                        .fill(.gray.opacity(0.1))
-                                        .frame(height: 180)
-                                        .cornerRadius(10)
-                                    
-                                    HStack(spacing: 40) {
-                                        VStack {
-                                            Text(array.month).foregroundStyle(.black.opacity(0.7))
-                                            Text("\(array.day)").font(.title)
-                                        }.padding(.bottom,70)
-                                            .padding(.leading)
-                                        VStack(alignment: .leading,spacing: 12) {
-                                            Text(array.title).font(.title3)
-                                            HStack {
-                                                Image("time").resizable().frame(width: 10,height: 10)
-                                                Text("\(array.startTime)- \(array.endTime)").font(.footnote)
-                                                Image("map").resizable().frame(width: 10,height: 10)
-                                                Text("\(array.location)").font(.footnote)
-                                            }
-                                            Text(array.description).font(.caption2)
-                                                .lineLimit(3)
-                                                .padding(.trailing,100)
-                                            HStack(spacing: 5) {
-                                                Image("people")
-                                                    .resizable()
-                                                    .frame(width: 10,height: 10)
-                                                Text("\(array.registeredCount) registered").font(.footnote)
-                                                Spacer()
-                                                    .frame(width: 50)
-                                                Text("View Details →")
-                                            }
-                                        }
-                                    }
+                            if viewModel.isLoadingMyEvents {
+                                HStack {
+                                    ProgressView()
+                                    Text("Loading events...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
                                 }
-                                
+                                .padding()
+                            } else if let error = viewModel.myEventsError {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding()
+                            } else if let firstEvent = viewModel.myEvents.first {
+                                MyEventCardView(event: firstEvent)
+                            } else {
+                                Text("No upcoming events")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding()
                             }
-                            
-                            
                         }
                         VStack(alignment: .leading) {
                             Text("Browse By Category")
                                 .font(.title2)
-                            LazyVGrid(columns: columns, spacing: 16) {
-                                ForEach(Category.mock) { category in
-                                    CategoryCardView(category: category)
+                            if viewModel.isLoadingCategories {
+                                HStack {
+                                    ProgressView()
+                                    Text("Loading categories...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding()
+                            } else if let error = viewModel.categoriesError {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding()
+                            } else if viewModel.categories.isEmpty {
+                                Text("No categories available")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding()
+                            } else {
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(viewModel.categories) { category in
+                                        CategoryCardView(category: category)
+                                    }
                                 }
                             }
                         }
@@ -137,6 +142,11 @@ struct HomeView: View {
             .onAppear {
                 viewModel.loadTrendingEvents()
                 viewModel.loadCurrentUser()
+                viewModel.loadMyEvents()
+                viewModel.loadCategories()
+            }
+            .sheet(isPresented: $viewModel.showAllEventsSheet) {
+                AllMyEventsView(events: viewModel.myEvents)
             }
         }
     }

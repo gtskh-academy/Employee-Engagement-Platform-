@@ -16,13 +16,15 @@ class TokenManager {
     
     var token: String? {
         get {
-            UserDefaults.standard.string(forKey: tokenKey)
+            return UserDefaults.standard.string(forKey: tokenKey)
         }
         set {
             if let token = newValue {
                 UserDefaults.standard.set(token, forKey: tokenKey)
+                print("🔑 Saved Token to Storage: \(token)")
             } else {
                 UserDefaults.standard.removeObject(forKey: tokenKey)
+                print("🔑 Token Cleared from Storage")
             }
         }
     }

@@ -13,7 +13,7 @@ class CreateAccountViewModel: ObservableObject {
     @Published var lastName: String = ""
     @Published var email: String = ""
     @Published var phoneNumber: String = ""
-    @Published var selectedDepartment: String = ""
+    @Published var selectedDepartment: Department?
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
     @Published var agreedToTerms: Bool = false
@@ -36,10 +36,11 @@ class CreateAccountViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var navigateToSignIn: Bool = false
     @Published var generalError: String?
+    @Published var departments: [Department] = []
+    @Published var isLoadingDepartments: Bool = false
+    @Published var departmentsError: String?
     
     var authViewModel: AuthViewModel?
-    
-    let departments = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations"]
     
     func validateFirstName() -> Bool {
         if firstName.isEmpty {
@@ -105,7 +106,7 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func validateDepartment() -> Bool {
-        if selectedDepartment.isEmpty {
+        if selectedDepartment == nil {
             departmentError = "Please select a department"
             return false
         }
@@ -306,7 +307,7 @@ class CreateAccountViewModel: ObservableObject {
             firstName: firstName,
             lastName: lastName,
             phoneNumber: cleanedPhone,
-            department: selectedDepartment
+            department: selectedDepartment?.name ?? ""
         )
         
         Task {
@@ -318,7 +319,7 @@ class CreateAccountViewModel: ObservableObject {
                     TokenManager.shared.saveAuthResponse(
                         response,
                         phoneNumber: phoneNumber,
-                        department: selectedDepartment
+                        department: selectedDepartment?.name ?? ""
                     )
                     
                     // Debug: Print token
@@ -360,6 +361,36 @@ class CreateAccountViewModel: ObservableObject {
         confirmPasswordError = nil
         termsError = nil
         generalError = nil
+    }
+    
+    func loadDepartments() {
+        isLoadingDepartments = true
+        departmentsError = nil
+        
+        Task {
+            do {
+                let fetchedDepartments = try await AuthService.shared.getDepartments(onlyActive: true)
+                await MainActor.run {
+                    self.departments = fetchedDepartments
+                    self.isLoadingDepartments = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoadingDepartments = false
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.departmentsError = message
+                        case .invalidResponse:
+                            self.departmentsError = "Invalid response from server"
+                        }
+                    } else {
+                        self.departmentsError = "Failed to load departments: \(error.localizedDescription)"
+                    }
+                    // Fallback to empty array or keep previous departments if available
+                }
+            }
+        }
     }
 }
 

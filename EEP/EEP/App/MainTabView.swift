@@ -7,10 +7,10 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedTab = 0
+    @ObservedObject private var tabSelectionManager = TabSelectionManager.shared
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $tabSelectionManager.selectedTab) {
             HomeView()
                 .tabItem {
                     Image(systemName: "house.fill")
@@ -18,7 +18,7 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            BrowseView()
+            BrowseByCategory()
                 .tabItem {
                     Image(systemName: "magnifyingglass")
                     Text("Browse")
@@ -46,6 +46,7 @@ struct MainTabView: View {
                 }
                 .tag(4)
         }
+        .environmentObject(tabSelectionManager)
     }
 }
 
