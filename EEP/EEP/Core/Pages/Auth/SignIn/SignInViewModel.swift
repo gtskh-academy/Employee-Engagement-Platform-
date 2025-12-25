@@ -1,10 +1,3 @@
-//
-//  SignInViewModel.swift
-//  EEP
-//
-//  Created by Giga Cxadiashvili on 23.12.25.
-//
-
 import Foundation
 import SwiftUI
 
@@ -18,9 +11,6 @@ class SignInViewModel: ObservableObject {
     @Published var generalError: String?
     
     @Published var isLoading: Bool = false
-    @Published var navigateToForgotPassword: Bool = false
-    @Published var navigateToSignUp: Bool = false
-    @Published var navigateToHome: Bool = false
     
     var authViewModel: AuthViewModel
     
@@ -34,10 +24,7 @@ class SignInViewModel: ObservableObject {
             return false
         }
         
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
-        
-        if !emailPredicate.evaluate(with: email) {
+        if !ValidationUtils.isValidEmail(email) {
             emailError = "Invalid email format"
             return false
         }
@@ -78,23 +65,10 @@ class SignInViewModel: ObservableObject {
                 let response = try await AuthService.shared.login(request)
                 
                 await MainActor.run {
-                    // Save token and user info
                     TokenManager.shared.saveAuthResponse(response)
-                    
-                    // Debug: Print token
-                    print("🔑 Sign In Token: \(response.token)")
-                    
-                    // Update AuthViewModel state
                     self.authViewModel.isAuthenticated = true
                     self.authViewModel.currentUser = TokenManager.shared.currentUser
-                    
-                    if self.rememberMe {
-                        // Save remember me preference
-                        UserDefaults.standard.set(true, forKey: "rememberMe")
-                    }
-                    
                     self.isLoading = false
-                    // ContentView will automatically switch to MainTabView when isAuthenticated changes
                 }
             } catch {
                 await MainActor.run {
@@ -117,14 +91,6 @@ class SignInViewModel: ObservableObject {
                 }
             }
         }
-    }
-    
-    func navigateToForgotPasswordScreen() {
-        navigateToForgotPassword = true
-    }
-    
-    func navigateToSignUpScreen() {
-        navigateToSignUp = true
     }
     
     func clearErrors() {

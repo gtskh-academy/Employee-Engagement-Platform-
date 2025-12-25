@@ -1,10 +1,3 @@
-//
-//  CreateAccountViewModel.swift
-//  EEP
-//
-//  Created by Giga Cxadiashvili on 23.12.25.
-//
-
 import Foundation
 import SwiftUI
 
@@ -34,7 +27,6 @@ class CreateAccountViewModel: ObservableObject {
     @Published var termsError: String?
     
     @Published var isLoading: Bool = false
-    @Published var navigateToSignIn: Bool = false
     @Published var generalError: String?
     @Published var departments: [Department] = []
     @Published var isLoadingDepartments: Bool = false
@@ -66,10 +58,7 @@ class CreateAccountViewModel: ObservableObject {
             return false
         }
         
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
-        
-        if !emailPredicate.evaluate(with: email) {
+        if !ValidationUtils.isValidEmail(email) {
             emailError = "Invalid email format"
             return false
         }
@@ -78,21 +67,21 @@ class CreateAccountViewModel: ObservableObject {
         return true
     }
     
+    private func cleanPhoneNumber(_ phone: String) -> String {
+        return phone.replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "+", with: "")
+    }
+    
     func validatePhoneNumber() -> Bool {
-        // Phone number is optional - if empty, it's valid
         if phoneNumber.isEmpty {
             phoneNumberError = nil
             return true
         }
         
-        // Remove spaces, dashes, and other formatting characters
-        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "+", with: "")
-        
-        // Phone number must start with 5 and have exactly 9 digits
+        let cleanedPhone = cleanPhoneNumber(phoneNumber)
         let phoneRegex = "^5[0-9]{8}$"
         let phonePredicate = NSPredicate(format:"SELF MATCHES %@", phoneRegex)
         
@@ -154,7 +143,6 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func validateAll() -> Bool {
-        // Phone number is optional, but if provided, it must be valid
         let phoneValid = phoneNumber.isEmpty || validatePhoneNumber()
         
         let isValid = validateFirstName() &&
@@ -169,7 +157,6 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     func sendOTP() {
-        // Phone number must be provided and valid to send OTP
         guard !phoneNumber.isEmpty else {
             phoneNumberError = "Phone number is required to send OTP"
             return
@@ -182,12 +169,7 @@ class CreateAccountViewModel: ObservableObject {
         isSendingOTP = true
         otpError = nil
         
-        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "+", with: "")
-        
+        let cleanedPhone = cleanPhoneNumber(phoneNumber)
         let request = SendPhoneCodeRequest(phoneNumber: cleanedPhone)
         
         Task {
@@ -227,12 +209,7 @@ class CreateAccountViewModel: ObservableObject {
         isVerifyingOTP = true
         otpError = nil
         
-        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "+", with: "")
-        
+        let cleanedPhone = cleanPhoneNumber(phoneNumber)
         let request = VerifyPhoneRequest(phoneNumber: cleanedPhone, code: code)
         
         Task {
@@ -264,17 +241,11 @@ class CreateAccountViewModel: ObservableObject {
     }
     
     var isPhoneNumberValid: Bool {
-        // Phone is optional - if empty, button should be disabled
         guard !phoneNumber.isEmpty else {
             return false
         }
         
-        let cleanedPhone = phoneNumber.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "+", with: "")
-        
+        let cleanedPhone = cleanPhoneNumber(phoneNumber)
         let phoneRegex = "^5[0-9]{8}$"
         let phonePredicate = NSPredicate(format:"SELF MATCHES %@", phoneRegex)
         return phonePredicate.evaluate(with: cleanedPhone)
@@ -285,7 +256,6 @@ class CreateAccountViewModel: ObservableObject {
             return
         }
         
-        // Phone verification is only required if phone number is provided
         if !phoneNumber.isEmpty && !isPhoneVerified {
             generalError = "Please verify your phone number with OTP"
             return
@@ -294,12 +264,7 @@ class CreateAccountViewModel: ObservableObject {
         isLoading = true
         generalError = nil
         
-        // Clean phone number before sending (or use empty string if not provided)
-        let cleanedPhone = phoneNumber.isEmpty ? "" : phoneNumber.replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "+", with: "")
+        let cleanedPhone = phoneNumber.isEmpty ? "" : cleanPhoneNumber(phoneNumber)
         
         let request = RegisterRequest(
             email: email,
@@ -315,22 +280,15 @@ class CreateAccountViewModel: ObservableObject {
                 let response = try await AuthService.shared.register(request)
                 
                 await MainActor.run {
-                    // Save token and user info
                     TokenManager.shared.saveAuthResponse(
                         response,
                         phoneNumber: phoneNumber,
                         department: selectedDepartment?.name ?? ""
                     )
                     
-                    // Debug: Print token
-                    print("🔑 Create Account Token: \(response.token)")
-                    
-                    // Update AuthViewModel if available
                     self.authViewModel?.isAuthenticated = true
                     self.authViewModel?.currentUser = TokenManager.shared.currentUser
-                    
                     self.isLoading = false
-                    // Don't navigate to SignIn - ContentView will handle navigation based on auth state
                 }
             } catch {
                 await MainActor.run {
@@ -387,7 +345,6 @@ class CreateAccountViewModel: ObservableObject {
                     } else {
                         self.departmentsError = "Failed to load departments: \(error.localizedDescription)"
                     }
-                    // Fallback to empty array or keep previous departments if available
                 }
             }
         }

@@ -17,7 +17,6 @@ struct User: Codable {
     let department: String?
     let isPhoneVerified: Bool?
     
-    // For backward compatibility with RegisterResponse
     var userId: Int {
         return id
     }

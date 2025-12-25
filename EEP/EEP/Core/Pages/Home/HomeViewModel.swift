@@ -64,7 +64,6 @@ class HomeViewModel: ObservableObject {
             } catch {
                 await MainActor.run {
                     self.isLoadingUser = false
-                    // If user fetch fails, try to use cached user from TokenManager
                     self.currentUser = TokenManager.shared.currentUser
                 }
             }
@@ -124,7 +123,6 @@ class HomeViewModel: ObservableObject {
                     } else {
                         self.categoriesError = "Failed to load categories: \(error.localizedDescription)"
                     }
-                    // Fallback to empty array - will show nothing or use hardcoded
                 }
             }
         }

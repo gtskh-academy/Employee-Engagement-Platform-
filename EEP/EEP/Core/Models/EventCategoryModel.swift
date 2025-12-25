@@ -13,9 +13,7 @@ struct EventCategoryModel: Identifiable, Codable {
     let imageUrl: String
     let count: Int
     
-    // Map imageUrl to SF Symbols system icon
     var systemIcon: String {
-        // Map PrimeIcons to SF Symbols
         switch imageUrl.lowercased() {
         case "pi-users", "users":
             return "person.3.fill"
@@ -30,7 +28,6 @@ struct EventCategoryModel: Identifiable, Codable {
         case "pi-building", "building", "team":
             return "building.2.fill"
         default:
-            // Default fallback icon
             return "tag.fill"
         }
     }

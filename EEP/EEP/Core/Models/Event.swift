@@ -28,12 +28,10 @@ enum EventCategory: String, Codable,CaseIterable,Identifiable {
 struct Event: Identifiable, Codable {
     let id: UUID
     
-    // Date
     let day: Int
     let month: String
     let year: Int
     
-    // Main info
     let title: String
     let startTime: String
     let endTime: String
@@ -41,7 +39,6 @@ struct Event: Identifiable, Codable {
     let eventCategory: String
     let eventByCategory: EventCategory
     
-    // Description
     let description: String
     let status: EventStatus
     let registeredCount: Int

@@ -15,7 +15,6 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // User Profile Section
                     VStack(spacing: 16) {
                         Image("PersonIcon")
                             .resizable()
@@ -58,7 +57,6 @@ struct ProfileView: View {
                     Spacer()
                         .frame(height: 20)
                     
-                    // Logout Section
                     VStack(spacing: 12) {
                         Text("Are you sure you want to log out?")
                             .font(.system(size: 15))
@@ -81,28 +79,5 @@ struct ProfileView: View {
             }
         }
     }
-}
-
-struct UserInfoRow: View {
-    let label: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(label + ":")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-            Spacer()
-            Text(value)
-                .font(.system(size: 14))
-                .foregroundColor(.black)
-        }
-        .padding(.horizontal, 20)
-    }
-}
-
-#Preview {
-    ProfileView()
-        .environmentObject(AuthViewModel())
 }
 

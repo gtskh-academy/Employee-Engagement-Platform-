@@ -20,7 +20,6 @@ struct EventDayListView: View {
                         .cornerRadius(10)
                     
                     HStack(spacing: 20) {
-                        // TIME COLUMN (fixed width)
                         timeColumnView(for: event)
                             .frame(width: 50)
                             .padding(.leading, 10)

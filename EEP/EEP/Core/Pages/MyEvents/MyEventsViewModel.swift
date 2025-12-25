@@ -42,7 +42,6 @@ class MyEventsViewModel: ObservableObject {
         }
     }
     
-    // Get dates that have events (for calendar indicators)
     func getEventDates() -> Set<DateComponents> {
         var dateSet = Set<DateComponents>()
         let calendar = Calendar.current
@@ -57,7 +56,6 @@ class MyEventsViewModel: ObservableObject {
         return dateSet
     }
     
-    // Get events for a specific date
     func getEvents(for date: Date) -> [MyEvent] {
         let calendar = Calendar.current
         let targetComponents = calendar.dateComponents([.year, .month, .day], from: date)
@@ -73,7 +71,6 @@ class MyEventsViewModel: ObservableObject {
         }
     }
     
-    // Get formatted date string for display
     func getFormattedDateString(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMM d"

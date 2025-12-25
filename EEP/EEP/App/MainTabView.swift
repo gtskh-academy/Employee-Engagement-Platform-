@@ -32,10 +32,10 @@ struct MainTabView: View {
                 }
                 .tag(2)
             
-            UpdatesView()
+            NotificationsView()
                 .tabItem {
                     Image(systemName: "bell")
-                    Text("Updates")
+                    Text("Notifications")
                 }
                 .tag(3)
             

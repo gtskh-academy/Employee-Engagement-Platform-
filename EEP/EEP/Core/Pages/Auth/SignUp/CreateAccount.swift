@@ -1,9 +1,3 @@
-//
-//  CreateAccount.swift
-//  EEP
-//
-//  Created by Giga Cxadiashvili on 23.12.25.
-//
 import SwiftUI
 
 struct CreateAccount: View {
@@ -243,9 +237,7 @@ struct CreateAccount: View {
                 .scrollIndicators(.hidden)
             }
             .onAppear {
-                // Pass AuthViewModel to ViewModel
                 viewModel.authViewModel = authViewModel
-                // Load departments from API
                 viewModel.loadDepartments()
             }
         }

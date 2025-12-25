@@ -23,14 +23,11 @@ struct TrendingEvent: Identifiable, Codable {
     let tags: [String]?
     let myRegistrationStatus: String?
     
-    // Computed property for formatted date
     var formattedDate: String {
         guard !startDateTime.isEmpty else {
-            print("startDateTime is empty")
             return ""
         }
         
-        // Try ISO8601DateFormatter first (handles format like "2026-05-15T09:00:00")
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime]
         
@@ -41,7 +38,6 @@ struct TrendingEvent: Identifiable, Codable {
             return displayFormatter.string(from: date)
         }
         
-        // Fallback to DateFormatter
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -54,12 +50,9 @@ struct TrendingEvent: Identifiable, Codable {
             return displayFormatter.string(from: date)
         }
         
-        // Debug: Print what we're trying to parse
-        print("Failed to parse date: '\(startDateTime)'")
         return ""
     }
     
-    // Computed property for day
     var day: Int {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -71,7 +64,6 @@ struct TrendingEvent: Identifiable, Codable {
         return 0
     }
     
-    // Computed property for month
     var month: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -84,7 +76,6 @@ struct TrendingEvent: Identifiable, Codable {
         return ""
     }
     
-    // Computed property for start time
     var startTime: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -97,13 +88,12 @@ struct TrendingEvent: Identifiable, Codable {
         return ""
     }
     
-    // Computed property for end time (assuming 2 hours duration for now, or use API if available)
     var endTime: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         
         if let date = formatter.date(from: startDateTime) {
-            let endDate = date.addingTimeInterval(2 * 60 * 60) // Add 2 hours
+            let endDate = date.addingTimeInterval(2 * 60 * 60)
             let timeFormatter = DateFormatter()
             timeFormatter.dateFormat = "HH:mm"
             return timeFormatter.string(from: endDate)
@@ -111,7 +101,6 @@ struct TrendingEvent: Identifiable, Codable {
         return ""
     }
     
-    // Computed property for location string
     var locationString: String {
         guard let location = location else { return "Location TBD" }
         if let venueName = location.venueName, !venueName.isEmpty {
@@ -124,9 +113,8 @@ struct TrendingEvent: Identifiable, Codable {
         return "Location TBD"
     }
     
-    // Computed property for description (use title if description not available)
     var descriptionText: String {
-        return title // For now, use title. Can be updated if API provides description
+        return title
     }
 }
 
@@ -138,7 +126,6 @@ struct EventLocation: Codable {
     let room: String?
     let floor: String?
     
-    // Custom decoding for type field - can be Int or String
     let type: Int?
     
     enum CodingKeys: String, CodingKey {
@@ -161,7 +148,6 @@ struct EventLocation: Codable {
         room = try? container.decode(String.self, forKey: .room)
         floor = try? container.decode(String.self, forKey: .floor)
         
-        // Try to decode type as Int first, if that fails try as String and convert
         if let intValue = try? container.decode(Int.self, forKey: .type) {
             type = intValue
         } else if let stringValue = try? container.decode(String.self, forKey: .type),

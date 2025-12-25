@@ -29,7 +29,6 @@ struct AuthService {
         
         switch httpResponse.statusCode {
         case 200..<300:
-            // Parse JSON response
             let decoder = JSONDecoder()
             do {
                 let registerResponse = try decoder.decode(RegisterResponse.self, from: data)
@@ -62,7 +61,6 @@ struct AuthService {
         
         switch httpResponse.statusCode {
         case 200..<300:
-            // Parse JSON response
             let decoder = JSONDecoder()
             do {
                 let loginResponse = try decoder.decode(RegisterResponse.self, from: data)
@@ -96,7 +94,6 @@ struct AuthService {
         
         switch httpResponse.statusCode {
         case 200..<300:
-            // Success - OTP sent
             return
         case 400:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Bad request"
@@ -124,7 +121,6 @@ struct AuthService {
         
         switch httpResponse.statusCode {
         case 200..<300:
-            // Success - Phone verified
             return
         case 400:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Invalid code"
@@ -156,7 +152,6 @@ struct AuthService {
             let decoder = JSONDecoder()
             do {
                 let user = try decoder.decode(User.self, from: data)
-                // Update TokenManager with the fetched user data
                 TokenManager.shared.currentUser = user
                 return user
             } catch {
@@ -182,7 +177,6 @@ struct AuthService {
         request.httpMethod = "GET"
         request.setValue("text/plain", forHTTPHeaderField: "accept")
         
-        // Add token if available (for authenticated requests)
         if let token = TokenManager.shared.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
@@ -210,5 +204,4 @@ struct AuthService {
         }
     }
 }
-
 

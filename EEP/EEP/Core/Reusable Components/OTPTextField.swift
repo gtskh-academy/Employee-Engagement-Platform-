@@ -5,12 +5,9 @@
 //  Created by m1 pro on 24.12.25.
 //
 
-
 import SwiftUI
 
-
 struct OTPTextField: View {
-    
     @Binding var text: String
     let isFocused: Bool
     

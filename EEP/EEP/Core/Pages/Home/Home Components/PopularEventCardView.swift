@@ -12,7 +12,6 @@ struct PopularEventCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Cached image with placeholder
             CachedAsyncImage(url: event.imageUrl) { image in
                 image
                     .resizable()

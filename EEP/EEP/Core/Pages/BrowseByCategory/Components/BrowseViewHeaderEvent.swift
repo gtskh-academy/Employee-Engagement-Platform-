@@ -23,27 +23,38 @@ struct BrowseViewHeaderEvent: View {
                         .frame(width: 25,height: 30)
                 }.padding(.horizontal)
                 HStack(spacing: 30) {
-                    TextField("🔎︎ Search Events..", text: $searchText)
-                        .padding()
-                        .frame(width: 250,height: 45)
-                        .border(.gray, width: 1)
-                        .background(.gray.opacity(0.2))
-                        .cornerRadius(5)
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .padding(.leading, 12)
+                        TextField("Search Events..", text: $searchText)
+                    }
+                    .padding(.vertical, 12)
+                    .frame(width: 250, height: 45)
+                    .background(.gray.opacity(0.2))
+                    .cornerRadius(5)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color.gray, lineWidth: 1)
+                    )
+                    
                     Button(action: {
-                        
                     }, label: {
-                        HStack {
-                            Image("filter")
-                                .resizable()
-                                .frame(width: 20,height: 20)
+                        HStack(spacing: 6) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .foregroundColor(.black)
+                                .font(.system(size: 18))
                             Text("Filters")
                                 .foregroundStyle(Color.black)
-                        }.background(
-                            Rectangle()
-                                .fill(.white)
-                                .frame(width: 100,height: 45)
-                                .border(Color.gray, width: 1)
-                                .cornerRadius(5)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 12)
+                        .frame(width: 100, height: 45)
+                        .background(.white)
+                        .cornerRadius(5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(Color.gray, lineWidth: 1)
                         )
                     })
                 }
@@ -53,8 +64,4 @@ struct BrowseViewHeaderEvent: View {
             }
         
     }
-}
-
-#Preview {
-    BrowseByCategory()
 }

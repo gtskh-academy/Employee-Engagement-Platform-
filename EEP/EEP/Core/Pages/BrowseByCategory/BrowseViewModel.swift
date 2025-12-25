@@ -15,18 +15,16 @@ class BrowseViewModel: ObservableObject {
     @Published var isLoadingCategories: Bool = false
     @Published var eventsError: String?
     @Published var categoriesError: String?
-    @Published var selectedCategoryId: Int? = nil // nil means "All"
+    @Published var selectedCategoryId: Int? = nil
     @Published var searchText: String = ""
     
     var filteredEvents: [BrowseEvent] {
         var filtered = events
         
-        // Filter by category
         if let categoryId = selectedCategoryId {
             filtered = filtered.filter { $0.categoryId == categoryId }
         }
         
-        // Filter by search text
         if !searchText.isEmpty {
             filtered = filtered.filter { event in
                 event.title.localizedCaseInsensitiveContains(searchText) ||

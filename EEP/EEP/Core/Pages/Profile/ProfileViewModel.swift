@@ -27,7 +27,6 @@ class ProfileViewModel: ObservableObject {
             } catch {
                 await MainActor.run {
                     self.isLoading = false
-                    // Try to use cached user if API call fails
                     self.user = TokenManager.shared.currentUser
                     if self.user == nil {
                         self.errorMessage = "Failed to load user data: \(error.localizedDescription)"

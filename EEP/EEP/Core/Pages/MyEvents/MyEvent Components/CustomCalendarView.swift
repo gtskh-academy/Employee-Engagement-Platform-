@@ -22,7 +22,6 @@ struct CustomCalendarView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Month header
             HStack {
                 Button(action: { changeMonth(-1) }) {
                     Image(systemName: "chevron.left")
@@ -43,7 +42,6 @@ struct CustomCalendarView: View {
             }
             .padding(.horizontal)
             
-            // Weekday headers
             HStack {
                 ForEach(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], id: \.self) { day in
                     Text(day)
@@ -54,7 +52,6 @@ struct CustomCalendarView: View {
             }
             .padding(.horizontal)
             
-            // Calendar grid
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
                 ForEach(Array(daysInMonth.enumerated()), id: \.offset) { index, date in
                     if let date = date {
@@ -94,7 +91,6 @@ struct CustomCalendarView: View {
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
         }
         
-        // Fill remaining cells to make 6 rows (42 days total)
         while days.count < 42 {
             days.append(nil)
         }
@@ -111,38 +107,6 @@ struct CustomCalendarView: View {
         if let newMonth = calendar.date(byAdding: .month, value: direction, to: currentMonth) {
             currentMonth = newMonth
         }
-    }
-}
-
-struct DayView: View {
-    let date: Date
-    let isSelected: Bool
-    let hasEvent: Bool
-    let isCurrentMonth: Bool
-    
-    private let calendar = Calendar.current
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Text("\(calendar.component(.day, from: date))")
-                .font(.system(size: 16, weight: isSelected ? .bold : .regular))
-                .foregroundColor(isCurrentMonth ? (isSelected ? .white : .black) : .gray)
-            
-            if hasEvent {
-                Circle()
-                    .fill(Color.black)
-                    .frame(width: 4, height: 4)
-            } else {
-                Spacer()
-                    .frame(height: 4)
-            }
-        }
-        .frame(width: 40, height: 50)
-        .background(
-            Circle()
-                .fill(isSelected ? Color.blue : Color.clear)
-                .frame(width: 32, height: 32)
-        )
     }
 }
 

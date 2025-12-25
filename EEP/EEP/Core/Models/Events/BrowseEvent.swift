@@ -23,7 +23,6 @@ struct BrowseEvent: Identifiable, Codable {
     let isFull: Bool?
     let imageUrl: String?
     
-    // Helper to parse date strings
     private func parseDate(_ dateString: String) -> Date? {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -38,7 +37,6 @@ struct BrowseEvent: Identifiable, Codable {
         return formatter.date(from: dateString)
     }
     
-    // Computed property for formatted date
     var formattedDate: String {
         guard let date = parseDate(startDateTime) else { return "" }
         let displayFormatter = DateFormatter()
@@ -47,13 +45,11 @@ struct BrowseEvent: Identifiable, Codable {
         return displayFormatter.string(from: date)
     }
     
-    // Computed property for day
     var day: Int {
         guard let date = parseDate(startDateTime) else { return 0 }
         return Calendar.current.component(.day, from: date)
     }
     
-    // Computed property for month
     var month: String {
         guard let date = parseDate(startDateTime) else { return "" }
         let displayFormatter = DateFormatter()
@@ -62,7 +58,6 @@ struct BrowseEvent: Identifiable, Codable {
         return displayFormatter.string(from: date).uppercased()
     }
     
-    // Computed property for start time
     var startTime: String {
         guard let date = parseDate(startDateTime) else { return "" }
         let timeFormatter = DateFormatter()
@@ -71,7 +66,6 @@ struct BrowseEvent: Identifiable, Codable {
         return timeFormatter.string(from: date)
     }
     
-    // Computed property for end time
     var endTime: String {
         guard let date = parseDate(endDateTime) else { return "" }
         let timeFormatter = DateFormatter()
@@ -80,7 +74,6 @@ struct BrowseEvent: Identifiable, Codable {
         return timeFormatter.string(from: date)
     }
     
-    // Computed property for location string
     var locationString: String {
         guard let location = location else { return "Location TBD" }
         if let venueName = location.venueName, !venueName.isEmpty {
@@ -93,7 +86,6 @@ struct BrowseEvent: Identifiable, Codable {
         return "Location TBD"
     }
     
-    // Status string for display
     var statusString: String {
         if isFull == true {
             return "Full"
@@ -114,7 +106,6 @@ struct BrowseEventLocation: Codable {
     let room: String?
     let floor: String?
     
-    // Custom decoding for type field - can be Int or String
     let type: String?
     
     enum CodingKeys: String, CodingKey {
@@ -137,7 +128,6 @@ struct BrowseEventLocation: Codable {
         room = try? container.decode(String.self, forKey: .room)
         floor = try? container.decode(String.self, forKey: .floor)
         
-        // Try to decode type as String first, if that fails try as Int and convert
         if let stringValue = try? container.decode(String.self, forKey: .type) {
             type = stringValue
         } else if let intValue = try? container.decode(Int.self, forKey: .type) {

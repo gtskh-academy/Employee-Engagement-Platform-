@@ -13,7 +13,6 @@ struct SpeakerView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar placeholder
             Circle()
                 .fill(Color.gray.opacity(0.3))
                 .frame(width: 50, height: 50)

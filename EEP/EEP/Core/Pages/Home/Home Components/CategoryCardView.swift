@@ -12,27 +12,30 @@ struct CategoryCardView: View {
     let category: EventCategoryModel
     
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: category.systemIcon)
-                .font(.system(size: 30))
-                .foregroundColor(.gray)
-            
-            Text(category.name)
-                .font(.system(size: 14, weight: .medium))
-                .multilineTextAlignment(.center)
-            
-            Text("\(category.count) events")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
+        NavigationLink(destination: BrowseView(categoryId: category.id, categoryName: category.name)) {
+            VStack(spacing: 12) {
+                Image(systemName: category.systemIcon)
+                    .font(.system(size: 30))
+                    .foregroundColor(.gray)
+                
+                Text(category.name)
+                    .font(.system(size: 14, weight: .medium))
+                    .multilineTextAlignment(.center)
+                
+                Text("\(category.count) events")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+            }
+            .frame(maxWidth: .infinity, minHeight: 120)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(5)
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+            )
         }
-        .frame(maxWidth: .infinity, minHeight: 120)
-        .padding()
-        .background(Color.white)
-        .cornerRadius(5)
-        .overlay(
-            RoundedRectangle(cornerRadius: 5)
-                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-        )
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

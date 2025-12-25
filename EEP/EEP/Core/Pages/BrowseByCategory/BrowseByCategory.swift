@@ -1,5 +1,5 @@
 //
-//  Browse.swift
+//  BrowseByCategory.swift
 //  EEP
 //
 //  Created by m1 pro on 25.12.25.
@@ -19,7 +19,6 @@ struct BrowseByCategory: View {
             BrowseViewHeaderEvent(searchText: $viewModel.searchText)
                 .padding(.bottom, 5)
             
-            // Category Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 10) {
                     Button(action: {
@@ -55,7 +54,6 @@ struct BrowseByCategory: View {
             }
             .frame(height: itemHeight + 10)
             
-            // Events List
             ScrollView {
                 if viewModel.isLoadingEvents {
                     VStack(spacing: 12) {
@@ -111,9 +109,4 @@ struct BrowseByCategory: View {
         }
         }
     }
-}
-
-
-#Preview {
-    BrowseByCategory()
 }

@@ -12,3 +12,4 @@ struct LoginRequest: Codable {
     let password: String
 }
 
+

@@ -10,7 +10,7 @@ import SwiftUI
 
 struct NotificationCard: View {
     
-    let notification: AppNotification
+    let notification: UserNotification
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -24,14 +24,14 @@ struct NotificationCard: View {
                 Text("\(notification.title): \(notification.message)")
                     .font(.subheadline)
                 
-                Text(notification.time)
+                Text(notification.formattedTime)
                     .font(.caption)
                     .foregroundColor(.gray)
             }
             
             Spacer()
             
-            if notification.isUnread {
+            if !notification.isRead {
                 Circle()
                     .fill(Color.black)
                     .frame(width: 8, height: 8)

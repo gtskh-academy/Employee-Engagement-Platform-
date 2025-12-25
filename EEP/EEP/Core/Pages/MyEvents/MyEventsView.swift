@@ -86,7 +86,6 @@ struct MyEventsView: View {
     @ViewBuilder
     private var calendarView: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Next Upcoming Events section
             if let firstEvent = viewModel.events.first {
                 VStack(alignment: .leading) {
                     Text("Next Upcoming Events")
@@ -113,13 +112,8 @@ struct MyEventsView: View {
                                     .frame(width: 10, height: 10)
                                 Text(firstEvent.locationString)
                             }
-                            ZStack {
-                                Rectangle()
-                                    .fill(.gray.opacity(0.5))
-                                    .frame(width: 350, height: 140)
-                                    .cornerRadius(10)
-                                Text("Map Preview of Event Location")
-                            }
+                            
+                            mapView(for: firstEvent.location)
                         }
                         .font(.footnote)
                     }
@@ -131,7 +125,6 @@ struct MyEventsView: View {
                 .fill(Color.gray.opacity(0.5))
                 .frame(width: 400, height: 2)
             
-            // Custom Calendar with event indicators
             CustomCalendarView(
                 selectedDate: $selectedDate,
                 eventDates: viewModel.getEventDates()
@@ -142,7 +135,6 @@ struct MyEventsView: View {
                 .fill(Color.gray.opacity(0.5))
                 .frame(width: 400, height: 2)
             
-            // Events for selected date
             let selectedDateEvents = viewModel.getEvents(for: selectedDate)
             if !selectedDateEvents.isEmpty {
                 Text("Events on \(viewModel.getFormattedDateString(for: selectedDate))")
@@ -168,9 +160,47 @@ struct MyEventsView: View {
             }
         }
     }
-}
-
-
-#Preview {
-    MyEventsView()
+    
+    @ViewBuilder
+    private func mapView(for location: EventLocation?) -> some View {
+        if let location = location {
+            let addressString = buildAddressString(from: location)
+            if !addressString.isEmpty {
+                EventMapView(address: addressString)
+            } else {
+                placeholderMapView
+            }
+        } else {
+            placeholderMapView
+        }
+    }
+    
+    private func buildAddressString(from location: EventLocation) -> String {
+        var addressString = ""
+        if let address = location.address, !address.isEmpty {
+            addressString = address
+            if let city = location.city, !city.isEmpty {
+                addressString += ", \(city)"
+            }
+        } else if let venueName = location.venueName, !venueName.isEmpty {
+            addressString = venueName
+            if let city = location.city, !city.isEmpty {
+                addressString += ", \(city)"
+            }
+        } else if let city = location.city, !city.isEmpty {
+            addressString = city
+        }
+        return addressString
+    }
+    
+    @ViewBuilder
+    private var placeholderMapView: some View {
+        ZStack {
+            Rectangle()
+                .fill(.gray.opacity(0.5))
+                .frame(width: 350, height: 140)
+                .cornerRadius(10)
+            Text("Map Preview of Event Location")
+        }
+    }
 }

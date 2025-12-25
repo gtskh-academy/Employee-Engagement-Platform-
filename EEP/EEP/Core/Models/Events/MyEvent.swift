@@ -23,26 +23,26 @@ struct MyEvent: Identifiable, Codable {
     let confirmedCount: Int?
     let myStatus: String?
     let myPosition: Int?
-    let waitlistedCount: Int? // Added for /api/Events/{id} response
-    let createdBy: String? // Added for /api/Events/{id} response
+    let waitlistedCount: Int?
+    let createdBy: String?
+    let imageUrl: String?
     
     var id: Int { eventId }
     
-    // CodingKeys to handle both "id" and "eventId" from API
     enum CodingKeys: String, CodingKey {
         case eventId
-        case id // For /api/Events/{id} endpoint
+        case id
         case title, description, startDateTime, endDateTime
         case categoryId, categoryName, categoryImageUrl
         case location, activities, speakers, capacitySettings
         case confirmedCount, myStatus, myPosition
         case waitlistedCount, createdBy
+        case imageUrl
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // Try to decode eventId first, if not found try id
         if let eventIdValue = try? container.decode(Int.self, forKey: .eventId) {
             eventId = eventIdValue
         } else if let idValue = try? container.decode(Int.self, forKey: .id) {
@@ -67,6 +67,7 @@ struct MyEvent: Identifiable, Codable {
         myPosition = try? container.decode(Int.self, forKey: .myPosition)
         waitlistedCount = try? container.decode(Int.self, forKey: .waitlistedCount)
         createdBy = try? container.decode(String.self, forKey: .createdBy)
+        imageUrl = try? container.decode(String.self, forKey: .imageUrl)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -88,9 +89,9 @@ struct MyEvent: Identifiable, Codable {
         try container.encodeIfPresent(myPosition, forKey: .myPosition)
         try container.encodeIfPresent(waitlistedCount, forKey: .waitlistedCount)
         try container.encodeIfPresent(createdBy, forKey: .createdBy)
+        try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
     }
     
-    // Memberwise initializer
     init(
         eventId: Int,
         title: String,
@@ -108,7 +109,8 @@ struct MyEvent: Identifiable, Codable {
         myStatus: String? = nil,
         myPosition: Int? = nil,
         waitlistedCount: Int? = nil,
-        createdBy: String? = nil
+        createdBy: String? = nil,
+        imageUrl: String? = nil
     ) {
         self.eventId = eventId
         self.title = title
@@ -127,9 +129,9 @@ struct MyEvent: Identifiable, Codable {
         self.myPosition = myPosition
         self.waitlistedCount = waitlistedCount
         self.createdBy = createdBy
+        self.imageUrl = imageUrl
     }
     
-    // Computed property for formatted date
     var formattedDate: String {
         guard let date = parseDate(from: startDateTime) else {
             return ""
@@ -140,56 +142,46 @@ struct MyEvent: Identifiable, Codable {
         return displayFormatter.string(from: date)
     }
     
-    // Helper to parse date from startDateTime
     func parseDate(from dateString: String) -> Date? {
-        // Try various date formats
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         
-        // Try with fractional seconds and Z
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         if let date = formatter.date(from: dateString) {
             return date
         }
         
-        // Try with fractional seconds (2 decimals) without Z (for /api/Events/{id})
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
         if let date = formatter.date(from: dateString) {
             return date
         }
         
-        // Try with fractional seconds (3 decimals) without Z
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
         if let date = formatter.date(from: dateString) {
             return date
         }
         
-        // Try without fractional seconds with Z
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         if let date = formatter.date(from: dateString) {
             return date
         }
         
-        // Try without fractional seconds and without Z
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         if let date = formatter.date(from: dateString) {
             return date
         }
         
-        // Try ISO8601DateFormatter as fallback
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let date = isoFormatter.date(from: dateString) {
             return date
         }
         
-        // Try without fractional seconds
         isoFormatter.formatOptions = [.withInternetDateTime]
         return isoFormatter.date(from: dateString)
     }
     
-    // Computed property for day
     var day: Int {
         guard let date = parseDate(from: startDateTime) else {
             return 0
@@ -198,7 +190,6 @@ struct MyEvent: Identifiable, Codable {
         return calendar.component(.day, from: date)
     }
     
-    // Computed property for month
     var month: String {
         guard let date = parseDate(from: startDateTime) else {
             return ""
@@ -209,7 +200,6 @@ struct MyEvent: Identifiable, Codable {
         return displayFormatter.string(from: date).uppercased()
     }
     
-    // Computed property for year
     var year: Int {
         guard let date = parseDate(from: startDateTime) else {
             return 0
@@ -218,7 +208,6 @@ struct MyEvent: Identifiable, Codable {
         return calendar.component(.year, from: date)
     }
     
-    // Computed property for start time
     var startTime: String {
         guard let date = parseDate(from: startDateTime) else {
             return ""
@@ -229,7 +218,6 @@ struct MyEvent: Identifiable, Codable {
         return timeFormatter.string(from: date)
     }
     
-    // Computed property for end time
     var endTime: String {
         guard let date = parseDate(from: endDateTime) else {
             return ""
@@ -240,7 +228,6 @@ struct MyEvent: Identifiable, Codable {
         return timeFormatter.string(from: date)
     }
     
-    // Computed property for location string
     var locationString: String {
         guard let location = location else { return "Location TBD" }
         if let venueName = location.venueName, !venueName.isEmpty {
@@ -253,22 +240,19 @@ struct MyEvent: Identifiable, Codable {
         return "Location TBD"
     }
     
-    // Computed property for description
     var descriptionText: String {
         return description.isEmpty ? title : description
     }
     
-    // Computed property for duration in hours
     var durationHours: Int {
         guard let startDate = parseDate(from: startDateTime),
               let endDate = parseDate(from: endDateTime) else {
             return 0
         }
         let duration = endDate.timeIntervalSince(startDate)
-        return Int(duration / 3600) // Convert seconds to hours
+        return Int(duration / 3600)
     }
     
-    // Computed property for time range with duration
     var timeRangeWithDuration: String {
         if durationHours > 0 {
             return "\(startTime) - \(endTime) (\(durationHours)h)"
@@ -277,13 +261,10 @@ struct MyEvent: Identifiable, Codable {
     }
 }
 
-// Extension to convert BrowseEvent to MyEvent
 extension MyEvent {
     init(from browseEvent: BrowseEvent) {
-        // Convert BrowseEventLocation to EventLocation
         let eventLocation: EventLocation?
         if let browseLocation = browseEvent.location {
-            // Convert type from String to Int if possible
             let typeInt: Int?
             if let typeString = browseLocation.type {
                 typeInt = Int(typeString)
@@ -291,7 +272,6 @@ extension MyEvent {
                 typeInt = nil
             }
             
-            // Create a dictionary to encode as JSON, then decode as EventLocation
             var locationDict: [String: Any] = [:]
             if let id = browseLocation.id { locationDict["id"] = id }
             if let type = typeInt { locationDict["type"] = type }
@@ -301,7 +281,6 @@ extension MyEvent {
             if let room = browseLocation.room { locationDict["room"] = room }
             if let floor = browseLocation.floor { locationDict["floor"] = floor }
             
-            // Encode to JSON and decode as EventLocation
             if let jsonData = try? JSONSerialization.data(withJSONObject: locationDict),
                let decoded = try? JSONDecoder().decode(EventLocation.self, from: jsonData) {
                 eventLocation = decoded
@@ -322,12 +301,15 @@ extension MyEvent {
             categoryName: browseEvent.categoryName,
             categoryImageUrl: browseEvent.categoryImageUrl,
             location: eventLocation,
-            activities: nil, // BrowseEvent doesn't have activities
-            speakers: nil, // BrowseEvent doesn't have speakers
+            activities: nil,
+            speakers: nil,
             capacitySettings: browseEvent.capacitySettings,
             confirmedCount: browseEvent.confirmedCount,
-            myStatus: nil, // BrowseEvent doesn't have myStatus
-            myPosition: nil // BrowseEvent doesn't have myPosition
+            myStatus: nil,
+            myPosition: nil,
+            waitlistedCount: nil,
+            createdBy: nil,
+            imageUrl: browseEvent.imageUrl
         )
     }
 }

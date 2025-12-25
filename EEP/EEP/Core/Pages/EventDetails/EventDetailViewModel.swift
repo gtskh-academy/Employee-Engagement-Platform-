@@ -21,9 +21,7 @@ class EventDetailViewModel: ObservableObject {
         self.shouldFetchDetails = shouldFetchDetails
     }
     
-    // Initializer for fetching by ID
     init(eventId: Int) {
-        // Create a temporary event with minimal data
         self.event = MyEvent(
             eventId: eventId,
             title: "",
@@ -41,7 +39,8 @@ class EventDetailViewModel: ObservableObject {
             myStatus: nil,
             myPosition: nil,
             waitlistedCount: nil,
-            createdBy: nil
+            createdBy: nil,
+            imageUrl: nil
         )
         self.eventId = eventId
         self.shouldFetchDetails = true
@@ -72,13 +71,51 @@ class EventDetailViewModel: ObservableObject {
                         }
                     } else {
                         self.errorMessage = "Failed to load event details: \(error.localizedDescription)"
+                    }
                 }
             }
         }
     }
-}
     
-    // MARK: - Display Properties
+    @Published var isRegistering: Bool = false
+    @Published var registrationSuccess: Bool = false
+    @Published var registrationErrorMessage: String?
+    
+    func registerForEvent() {
+        guard let eventId = eventId else {
+            registrationErrorMessage = "Event ID not available"
+            return
+        }
+        
+        isRegistering = true
+        registrationErrorMessage = nil
+        registrationSuccess = false
+        
+        Task {
+            do {
+                let response = try await EventsService.shared.registerForEvent(eventId: eventId)
+                await MainActor.run {
+                    self.isRegistering = false
+                    self.registrationSuccess = true
+                    NotificationRefreshManager.shared.postRefreshNotification()
+                }
+            } catch {
+                await MainActor.run {
+                    self.isRegistering = false
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.registrationErrorMessage = message
+                        case .invalidResponse:
+                            self.registrationErrorMessage = "Invalid response from server"
+                        }
+                    } else {
+                        self.registrationErrorMessage = "Failed to register: \(error.localizedDescription)"
+                    }
+                }
+            }
+        }
+    }
     
     var categoryName: String? {
         return event.categoryName
@@ -114,10 +151,8 @@ class EventDetailViewModel: ObservableObject {
         return event.descriptionText
     }
     
-    // MARK: - Agenda
-    
     var hasAgenda: Bool {
-        return true // Always show agenda
+        return true
     }
     
     var agendaItems: [AgendaItem] {
@@ -132,7 +167,7 @@ class EventDetailViewModel: ObservableObject {
                 )
             }
         } else {
-            // Hardcoded fallback
+            // hardcoded fallback
             return [
                 AgendaItem(
                     number: 1,
@@ -159,10 +194,8 @@ class EventDetailViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Speakers
-    
     var hasSpeakers: Bool {
-        return true // Always show speakers
+        return true
     }
     
     var speakers: [SpeakerItem] {
@@ -174,7 +207,6 @@ class EventDetailViewModel: ObservableObject {
                 )
             }
         } else {
-            // Hardcoded fallback
             return [
                 SpeakerItem(name: "Sarah Johnson", role: "VP of Human Resources"),
                 SpeakerItem(name: "David Chen", role: "Lead Corporate Trainer")
@@ -182,18 +214,15 @@ class EventDetailViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Helper Methods
-    
     private func formatActivityTime(_ timeString: String) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         
-        // Try various date formats
         let formats = [
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SS",      // 2 decimal places without Z
-            "yyyy-MM-dd'T'HH:mm:ss.SSS",     // 3 decimal places without Z
+            "yyyy-MM-dd'T'HH:mm:ss.SS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
             "yyyy-MM-dd'T'HH:mm:ss"
         ]
@@ -208,7 +237,6 @@ class EventDetailViewModel: ObservableObject {
             }
         }
         
-        // Try ISO8601DateFormatter as fallback
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let date = isoFormatter.date(from: timeString) {
@@ -218,7 +246,6 @@ class EventDetailViewModel: ObservableObject {
             return timeFormatter.string(from: date)
         }
         
-        // Try without fractional seconds
         isoFormatter.formatOptions = [.withInternetDateTime]
         if let date = isoFormatter.date(from: timeString) {
             let timeFormatter = DateFormatter()
@@ -229,22 +256,5 @@ class EventDetailViewModel: ObservableObject {
         
         return timeString
     }
-}
-
-// MARK: - Display Models
-
-struct AgendaItem: Identifiable {
-    let id = UUID()
-    let number: Int
-    let time: String
-    let title: String
-    let description: String?
-    let location: String?
-}
-
-struct SpeakerItem: Identifiable {
-    let id = UUID()
-    let name: String
-    let role: String
 }
 

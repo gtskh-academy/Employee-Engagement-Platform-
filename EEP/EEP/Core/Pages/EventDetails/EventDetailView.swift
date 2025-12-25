@@ -10,17 +10,16 @@ import SwiftUI
 
 struct EventDetailView: View {
     @StateObject private var viewModel: EventDetailViewModel
-    @State private var showRegistrationAlert = false
     private let shouldDisableRegister: Bool
     
     init(event: MyEvent) {
         _viewModel = StateObject(wrappedValue: EventDetailViewModel(event: event, shouldFetchDetails: false))
-        self.shouldDisableRegister = true // Disable when opened from home page
+        self.shouldDisableRegister = true
     }
     
     init(eventId: Int) {
         _viewModel = StateObject(wrappedValue: EventDetailViewModel(eventId: eventId))
-        self.shouldDisableRegister = false // Enable when opened from BrowseByCategory
+        self.shouldDisableRegister = false
     }
     
     private var showErrorAlert: Bool {
@@ -28,13 +27,21 @@ struct EventDetailView: View {
     }
     
     private var eventHeader: some View {
-        Rectangle()
-            .fill(Color.gray.opacity(0.3))
-            .frame(height: 200)
-            .overlay(
-                Text("Event Banner Image")
+        CachedAsyncImage(url: viewModel.event.imageUrl) { image in
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } placeholder: {
+            ZStack {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                Image(systemName: "photo")
                     .foregroundColor(.white)
-            )
+                    .font(.system(size: 40))
+            }
+        }
+        .frame(height: 200)
+        .clipped()
     }
     
     @ViewBuilder
@@ -83,12 +90,16 @@ struct EventDetailView: View {
                     .font(.subheadline)
             }
             
-            CommonButton(title: shouldDisableRegister ? "Confirmed" : "Register Now") {
-                if !shouldDisableRegister {
-                    showRegistrationAlert = true
+            HStack {
+                Spacer()
+                CommonButton(title: shouldDisableRegister ? (viewModel.myStatus ?? "Confirmed") : (viewModel.isRegistering ? "Registering..." : "Register Now")) {
+                    if !shouldDisableRegister {
+                        viewModel.registerForEvent()
+                    }
                 }
+                .disabled(shouldDisableRegister || viewModel.isRegistering)
+                Spacer()
             }
-            .disabled(shouldDisableRegister)
             .padding(.top, 8)
             
             Text("Registration closes on Dec 19, 2025 at 5:00 PM.")
@@ -239,11 +250,21 @@ struct EventDetailView: View {
                 Text(error)
             }
         }
-        .alert("Registration", isPresented: $showRegistrationAlert) {
+        .alert("Registration Successful", isPresented: .constant(viewModel.registrationSuccess)) {
             Button("OK") {
+                viewModel.registrationSuccess = false
             }
         } message: {
-            Text("Registration functionality will be implemented soon.")
+            Text("You have successfully registered for this event!")
+        }
+        .alert("Registration Error", isPresented: .constant(viewModel.registrationErrorMessage != nil)) {
+            Button("OK") {
+                viewModel.registrationErrorMessage = nil
+            }
+        } message: {
+            if let error = viewModel.registrationErrorMessage {
+                Text(error)
+            }
         }
     }
 }

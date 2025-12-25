@@ -8,7 +8,6 @@
 
 import Foundation
 
-// Dummy data for NotificationPage UI 
 enum NotificationType: String, CaseIterable, Identifiable {
     case all = "All"
     case registrations = "Registrations"

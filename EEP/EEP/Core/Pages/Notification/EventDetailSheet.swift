@@ -5,12 +5,16 @@
 //  Created by m1 pro on 25.12.25.
 //
 
-
 import SwiftUI
+import Foundation
 
 struct EventDetailSheet: View {
     let event: EventDetails
     @Environment(\.dismiss) var dismiss
+    @State private var isCancelling = false
+    @State private var showSuccessAlert = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -73,7 +77,13 @@ struct EventDetailSheet: View {
                     
                     Spacer(minLength: 20)
                     
-                    CommonButton(title: "Cancel Registration") {
+                    HStack {
+                        Spacer()
+                        CommonButton(title: isCancelling ? "Cancelling..." : "Cancel Registration") {
+                            cancelRegistration()
+                        }
+                        .disabled(isCancelling)
+                        Spacer()
                     }
                     .padding(.bottom, 8)
                     
@@ -93,10 +103,58 @@ struct EventDetailSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.hidden)
+        .alert("Registration Cancelled", isPresented: $showSuccessAlert) {
+            Button("OK") {
+                dismiss()
+            }
+        } message: {
+            Text("Your registration has been successfully cancelled.")
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                errorMessage = nil
+            }
+        } message: {
+            if let error = errorMessage {
+                Text(error)
+            }
+        }
     }
-}
-
-
-#Preview {
-    EventDetailSheet(event: .dummy)
+    
+    private func cancelRegistration() {
+        guard let registrationId = event.registrationId else {
+            errorMessage = "Registration ID not available. Please try refreshing or contact support."
+            showErrorAlert = true
+            return
+        }
+        
+        isCancelling = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                try await EventsService.shared.cancelRegistration(registrationId: registrationId)
+                await MainActor.run {
+                    self.isCancelling = false
+                    self.showSuccessAlert = true
+                    NotificationRefreshManager.shared.postRefreshNotification()
+                }
+            } catch {
+                await MainActor.run {
+                    self.isCancelling = false
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .serverError(let message):
+                            self.errorMessage = message
+                        case .invalidResponse:
+                            self.errorMessage = "Invalid response from server"
+                        }
+                    } else {
+                        self.errorMessage = "Failed to cancel registration: \(error.localizedDescription)"
+                    }
+                    self.showErrorAlert = true
+                }
+            }
+        }
+    }
 }

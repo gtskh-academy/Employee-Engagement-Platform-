@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct CommonButton: View {
-    
     let title: String
     let action: () -> Void
     

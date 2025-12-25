@@ -1,9 +1,3 @@
-//
-//  SignIn.swift
-//  EEP
-//
-//  Created by Giga Cxadiashvili on 23.12.25.
-//
 import SwiftUI
 
 struct SignIn: View {
@@ -11,8 +5,6 @@ struct SignIn: View {
     @StateObject private var viewModel: SignInViewModel
     
     init() {
-        // Create a temporary AuthViewModel for SignInViewModel initialization
-        // This will be replaced by the environment object in onAppear
         let tempAuthVM = AuthViewModel()
         _viewModel = StateObject(wrappedValue: SignInViewModel(authViewModel: tempAuthVM))
     }
@@ -106,13 +98,8 @@ struct SignIn: View {
             }
             .padding(.top, 70)
             .onAppear {
-                // Update SignInViewModel to use the environment AuthViewModel
                 viewModel.authViewModel = authViewModel
             }
         }
     }
-}
-
-#Preview {
-    SignIn()
 }

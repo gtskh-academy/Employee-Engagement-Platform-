@@ -1,15 +1,7 @@
-//
-//  ResetAccount.swift
-//  EEP
-//
-//  Created by m1 pro on 23.12.25.
-//
-
 import SwiftUI
 
 struct ForgotPasswordView: View {
-    
-    @State private var emailForUpadePass: String = ""
+    @StateObject private var viewModel = ForgotPasswordViewModel()
     
     var body: some View {
         NavigationStack {
@@ -29,13 +21,31 @@ struct ForgotPasswordView: View {
                     CommonTextField(
                         title: "Email",
                         placeholder: "✉ Enter your email",
-                        text: $emailForUpadePass
+                        text: $viewModel.email
                     )
+                    
+                    if let emailError = viewModel.emailError {
+                        Text(emailError)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                    }
+                    
+                    if viewModel.showSuccessMessage {
+                        Text("Reset link sent! Please check your email.")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                    }
                     
                     Spacer().frame(height: 50)
                     
-                    CommonButton(title: "Send Reset Link") {
+                    CommonButton(title: viewModel.isLoading ? "Sending..." : "Send Reset Link") {
+                        viewModel.sendResetLink()
                     }
+                    .disabled(viewModel.isLoading)
                     
                     Spacer().frame(height: 50)
                     
@@ -48,9 +58,5 @@ struct ForgotPasswordView: View {
             .padding(.bottom, 120)
         }
     }
-}
-
-#Preview {
-    ForgotPasswordView()
 }
 

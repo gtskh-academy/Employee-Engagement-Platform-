@@ -8,109 +8,96 @@
 import SwiftUI
 
 struct BrowseView: View {
+    let categoryId: Int?
+    let categoryName: String?
     
-    @State private var selectedLocation: String = "Location"
-    @State private var showLastWeek = false
-    @State var search: String = ""
+    @StateObject private var viewModel: HomeBrowseViewModel
     
-    private let events = EventModel.dummyEvents
-    
-    private var locations: [String] {
-        Array(Set(events.map { $0.location })).sorted()
-    }
-    
-    private var filteredEvents: [EventModel] {
-        events.filter {
-            (selectedLocation == "Location" || $0.location == selectedLocation) &&
-            (!showLastWeek || $0.isLastWeek)
-        }
+    init(categoryId: Int?, categoryName: String?) {
+        self.categoryId = categoryId
+        self.categoryName = categoryName
+        _viewModel = StateObject(wrappedValue: HomeBrowseViewModel(selectedCategoryId: categoryId))
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                
-                filterSection
-                
-                ForEach(filteredEvents) { event in
-                    EventCardView(event: event)
-                }
-            }
-            .padding()
-        }
-        .scrollIndicators(.hidden)
-    }
-    
-    private var filterSection: some View {
-        VStack {
-            HStack {
-                    TextField("Search events", text: $search)
-                        .padding(.leading, 12)
-                        .padding(.vertical, 10)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                        .padding(.trailing, 12)
-                }
-                .background(Color.gray.opacity(0.15))
-                .cornerRadius(10)
-                .padding(.bottom,10)
-            HStack(spacing: 12) {
-                Button(action: {
-                    
-                }, label: {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
                     HStack {
-                        Image(systemName: "list.bullet")
-                            .resizable()
-                            .foregroundStyle(.white)
-                            .frame(width: 13,height: 13)
-                        Text("Filter")
-                            .foregroundStyle(.white)
+                        TextField("Search events", text: $viewModel.searchText)
+                            .padding(.leading, 12)
+                            .padding(.vertical, 10)
                         
+                        Spacer()
+                        
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .padding(.trailing, 12)
                     }
-                    .padding(.horizontal,20)
-                    .padding(.vertical,5)
-                    .background(Color.black)
-                    .cornerRadius(40)
-                })
-                
-                Menu {
-                    ForEach(locations, id: \.self) { location in
-                        Button(location) {
-                            selectedLocation = location
+                    .background(Color.gray.opacity(0.15))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    if viewModel.isLoading {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("Loading events...")
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         }
+                        .padding(.top, 100)
+                    } else if let error = viewModel.errorMessage {
+                        VStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.red)
+                            Text("Error")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            Text(error)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.top, 100)
+                        .padding(.horizontal)
+                    } else if viewModel.filteredEvents.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "calendar.badge.exclamationmark")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.gray)
+                            Text("No Events")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                            Text(viewModel.searchText.isEmpty
+                                 ? "No events available in this category."
+                                 : "No events match your search.")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.top, 100)
+                        .padding(.horizontal)
+                    } else {
+                        ForEach(viewModel.filteredEvents) { event in
+                            NavigationLink(destination: EventDetailView(eventId: event.id)) {
+                                BrowseEventCardView(event: event)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .padding(.horizontal)
                     }
-                } label: {
-                    filterChip(title: selectedLocation)
                 }
-                
-                Button {
-                    showLastWeek.toggle()
-                } label: {
-                    filterChip(title: showLastWeek ? "Last Week ✓" : "Last Week")
-                }
-                
-                Spacer()
+            }
+            .scrollIndicators(.hidden)
+            .navigationTitle(categoryName ?? "Browse Events")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                viewModel.loadEvents()
             }
         }
     }
-    
-    private func filterChip(title: String) -> some View {
-        HStack {
-            Text(title)
-            Image(systemName: "chevron.down")
-        }
-        .font(.caption)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.gray.opacity(0.15))
-        .cornerRadius(20)
-    }
-}
-
-
-#Preview {
-    BrowseView()
 }

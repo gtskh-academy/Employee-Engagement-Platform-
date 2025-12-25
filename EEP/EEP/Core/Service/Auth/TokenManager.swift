@@ -21,10 +21,8 @@ class TokenManager {
         set {
             if let token = newValue {
                 UserDefaults.standard.set(token, forKey: tokenKey)
-                print("🔑 Saved Token to Storage: \(token)")
             } else {
                 UserDefaults.standard.removeObject(forKey: tokenKey)
-                print("🔑 Token Cleared from Storage")
             }
         }
     }
@@ -73,7 +71,6 @@ class TokenManager {
             return expiresAt > Date()
         }
         
-        // If no expiration date, assume token is valid if it exists
         return true
     }
     
